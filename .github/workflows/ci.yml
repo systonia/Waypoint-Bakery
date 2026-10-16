@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      # The tests connect as the runner's own user, as on a developer's machine
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: runner
+          POSTGRES_DB: bakery_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: intl, zip
+          coverage: none
+
+      - name: Install tenma
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/systonia/Tenma/main/packaging/install.sh | sh
+          tenma --version
+
+      - name: Install dependencies
+        run: |
+          composer validate --strict
+          composer install --no-progress --no-interaction
+
+      # vendor/bin/phpunit hands the run to tenma (tests/bootstrap.php)
+      - name: Tests
+        run: vendor/bin/phpunit
+
+      - name: PHPStan
+        run: vendor/bin/phpstan --no-progress
+
+      - name: Live templates
+        run: vendor/bin/live-check
+
+      - name: Translations are complete
+        run: |
+          tenma bin/task.php i18n:extract
+          git diff --exit-code lang/
+          tenma bin/task.php i18n:check
