@@ -58,6 +58,11 @@ final class OrderTracker
             ->format('H:i');
     }
 
+    private function day(string $date): string
+    {
+        return Format::day($date, $this->i18n->locale());
+    }
+
     private function price(int $cents): string
     {
         return Format::price($cents, $this->i18n->locale());

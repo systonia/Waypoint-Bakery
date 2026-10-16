@@ -28,7 +28,7 @@
     "Order": "Bestellung",
     "Orders": "Bestellungen",
     "Orders of the last seven days": "Bestellungen der letzten sieben Tage",
-    "Order {code} for {name}, pickup on {day}.": "Bestellung {code} für {name}, Abholung am {day}.",
+    "Order {code} for {name}. Pickup: {day}": "Bestellung {code} für {name}. Abholung: {day}",
     "Password": "Passwort",
     "Picked up": "Abgeholt",
     "Pickup": "Abholung",

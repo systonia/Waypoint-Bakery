@@ -4,7 +4,7 @@
 @else
     <div class="grid gap-6">
         <p class="text-lg">
-            {{ $this->i18n->t('Order {code} for {name}, pickup on {day}.', ['code' => $order->code, 'name' => $order->customerName, 'day' => Bakery\Format::day($order->pickupDate, $this->i18n->locale())]) }}
+            {{ $this->i18n->t('Order {code} for {name}. Pickup: {day}', ['code' => $order->code, 'name' => $order->customerName, 'day' => $this->day($order->pickupDate)]) }}
         </p>
         @if ($order->status === Bakery\Ordering\OrderStatus::Pending)
             <div class="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
