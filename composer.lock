@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a827866ad6affa82d8def5e1abcf7673",
+    "content-hash": "49bb3a2ed2ae9b56baa269c8b2d8cd08",
     "packages": [
         {
             "name": "psr/container",
@@ -505,16 +505,16 @@
         },
         {
             "name": "systonia/waypoint-live",
-            "version": "v0.2.0",
+            "version": "v0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/systonia/Waypoint-Live.git",
-                "reference": "e2be2cf2f126865001d0a399eca9f43ec72a0a19"
+                "reference": "cb065e946ce6f8b1b616258363e43ed530a389cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/systonia/Waypoint-Live/zipball/e2be2cf2f126865001d0a399eca9f43ec72a0a19",
-                "reference": "e2be2cf2f126865001d0a399eca9f43ec72a0a19",
+                "url": "https://api.github.com/repos/systonia/Waypoint-Live/zipball/cb065e946ce6f8b1b616258363e43ed530a389cf",
+                "reference": "cb065e946ce6f8b1b616258363e43ed530a389cf",
                 "shasum": ""
             },
             "require": {
@@ -524,7 +524,7 @@
             "require-dev": {
                 "phpstan/phpstan": "^2.2",
                 "phpunit/phpunit": "^13.3",
-                "tenma/stubs": "^0.1.11"
+                "tenma/stubs": "^0.1.15"
             },
             "bin": [
                 "bin/live-check"
@@ -541,6 +541,9 @@
                 }
             },
             "autoload": {
+                "files": [
+                    "src/classes.php"
+                ],
                 "psr-4": {
                     "Waypoint\\Live\\": "src/"
                 }
@@ -553,9 +556,9 @@
             "description": "Live components for Waypoint under Tenma: server-side PHP components, events and renders over one WebSocket, services called directly.",
             "support": {
                 "issues": "https://github.com/systonia/Waypoint-Live/issues",
-                "source": "https://github.com/systonia/Waypoint-Live/tree/v0.2.0"
+                "source": "https://github.com/systonia/Waypoint-Live/tree/v0.2.1"
             },
-            "time": "2026-10-16T07:20:21+00:00"
+            "time": "2026-10-16T17:35:18+00:00"
         }
     ],
     "packages-dev": [
@@ -2493,16 +2496,16 @@
         },
         {
             "name": "tenma/stubs",
-            "version": "0.1.13",
+            "version": "0.1.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/systonia/Tenma-Stubs.git",
-                "reference": "72e5c27b93f483d38ba76b0888f1f8f07e9f7ac7"
+                "reference": "c7b5f0b659bde04e0a0e35c9e632191a853078e2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/systonia/Tenma-Stubs/zipball/72e5c27b93f483d38ba76b0888f1f8f07e9f7ac7",
-                "reference": "72e5c27b93f483d38ba76b0888f1f8f07e9f7ac7",
+                "url": "https://api.github.com/repos/systonia/Tenma-Stubs/zipball/c7b5f0b659bde04e0a0e35c9e632191a853078e2",
+                "reference": "c7b5f0b659bde04e0a0e35c9e632191a853078e2",
                 "shasum": ""
             },
             "require": {
@@ -2541,7 +2544,7 @@
                 "issues": "https://github.com/systonia/Tenma-Stubs/issues",
                 "source": "https://github.com/systonia/Tenma-Stubs"
             },
-            "time": "2026-10-16T07:26:07+00:00"
+            "time": "2026-10-16T17:34:19+00:00"
         },
         {
             "name": "theseer/tokenizer",

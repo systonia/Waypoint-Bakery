@@ -2,9 +2,10 @@
 
 namespace Bakery\Backoffice;
 
-use Bakery\Ordering\{Order, Orders};
+use Bakery\Ordering\{Order, OrderLine, Orders};
 use DateTimeImmutable;
-use Waypoint\Attributes\{Authenticated, Controller, Get, Inject, Role};
+use LogicException;
+use Waypoint\Attributes\{Authenticated, Controller, Get, Ignore, Inject, Role};
 use Waypoint\Charts\Chart;
 use Waypoint\Exceptions\NotFoundException;
 use Waypoint\Export\Sheet;
@@ -13,6 +14,7 @@ use Waypoint\I18n\Translator;
 
 /** The back office's pages. Sales and exports are for the owner; the order board and the stock for everyone in the bakery. */
 #[Controller('/backoffice')]
+#[Ignore]
 #[Authenticated]
 final class BackofficeController
 {
@@ -28,13 +30,13 @@ final class BackofficeController
     #[Get('')]
     public function board(Request $req): View
     {
-        return new View('Backoffice/Board', ['user' => $req->jwt], layout: '_Backoffice.php');
+        return new View('Backoffice/Board', self::user($req), layout: '_Backoffice.php');
     }
 
     #[Get('/stock')]
     public function stock(Request $req): View
     {
-        return new View('Backoffice/Stock', ['user' => $req->jwt], layout: '_Backoffice.php');
+        return new View('Backoffice/Stock', self::user($req), layout: '_Backoffice.php');
     }
 
     #[Get('/sales')]
@@ -47,16 +49,16 @@ final class BackofficeController
             products: fn () => $this->sales->topProducts(28, $locale),
             orders: fn () => $this->orders->recent(7),
         );
-        return new View('Backoffice/Sales', [
-            'revenue' => Chart::fromRows($revenue, x: 'day', y: 'revenue')
+        return new View('Backoffice/Sales', new SalesPage(
+            user: self::user($req),
+            revenue: Chart::fromRows($revenue, x: 'day', y: 'revenue')
                 ->title($this->translator->t('Revenue per day, last four weeks'))
                 ->unit('€'),
-            'products' => Chart::fromRows($products, x: 'product', y: 'quantity')
+            products: Chart::fromRows($products, x: 'product', y: 'quantity')
                 ->title($this->translator->t('Sold in the last four weeks'))
                 ->size(640, 280),
-            'latest' => $this->sheet('orders.html', $orders),
-            'user' => $req->jwt,
-        ], layout: '_Backoffice.php');
+            latest: $this->sheet('orders.html', $orders),
+        ), layout: '_Backoffice.php');
     }
 
     /** The last 90 days of orders as orders.csv or orders.xlsx. */
@@ -70,6 +72,12 @@ final class BackofficeController
         return $this->sheet("orders.$format", $this->orders->recent(90));
     }
 
+    /** #[Authenticated] let the request in: it has a JWT. */
+    private static function user(Request $req): User
+    {
+        return User::fromJwt($req->jwt) ?? throw new LogicException('An authenticated request without a user');
+    }
+
     /** @param list<Order> $orders */
     private function sheet(string $file, array $orders): Sheet
     {
@@ -81,7 +89,7 @@ final class BackofficeController
             ->column('customer', $this->translator->t('Customer'), fn (Order $o) => $o->customerName)
             ->column('email', $this->translator->t('Email'))
             ->column('status', $this->translator->t('Status'), fn (Order $o) => $o->status->value)
-            ->column('items', $this->translator->t('Items'), fn (Order $o) => implode(', ', array_map(fn (array $l) => "{$l['quantity']} × {$l['name']}", $o->lines)))
+            ->column('items', $this->translator->t('Items'), fn (Order $o) => implode(', ', array_map(fn (OrderLine $l) => "$l->quantity × $l->name", $o->lines)))
             ->column('total', $this->translator->t('Total (€)'), fn (Order $o) => $o->totalCents / 100)
             ->rows($orders);
     }

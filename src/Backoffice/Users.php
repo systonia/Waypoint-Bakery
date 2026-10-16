@@ -18,12 +18,11 @@ final class Users
      * Note: password_verify() is CPU work. Unlike a query it does not wait but compute, and holds up the other
      * requests of this worker for its few dozen milliseconds. Fine for a login form; keep loops of it out of requests.
      *
-     * @return array{id: int, name: string, role: string}|null
      */
-    public function verify(string $email, string $password): ?array
+    public function verify(string $email, string $password): ?User
     {
         $user = $this->db->first('SELECT id, name, role, password_hash FROM users WHERE lower(email) = lower($1)', [trim($email)]);
         $valid = password_verify($password, (string) ($user['password_hash'] ?? self::NOBODY));
-        return $user !== null && $valid ? ['id' => (int) $user['id'], 'name' => (string) $user['name'], 'role' => (string) $user['role']] : null;
+        return $user !== null && $valid ? new User((int) $user['id'], (string) $user['name'], (string) $user['role']) : null;
     }
 }

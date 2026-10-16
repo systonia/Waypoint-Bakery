@@ -4,7 +4,7 @@ namespace Bakery\Ordering;
 
 final readonly class Order
 {
-    /** @param list<array{product: int, name: string, price: int, quantity: int}> $lines */
+    /** @param list<OrderLine> $lines */
     public function __construct(
         public int $id,
         public string $code,
@@ -24,7 +24,7 @@ final readonly class Order
     {
         $lines = [];
         foreach ((array) $row['lines'] as $line) {
-            $lines[] = ['product' => (int) $line['product'], 'name' => (string) $line['name'], 'price' => (int) $line['price'], 'quantity' => (int) $line['quantity']];
+            $lines[] = new OrderLine((int) $line['product'], (string) $line['name'], (int) $line['price'], (int) $line['quantity']);
         }
         return new self(
             (int) $row['id'],

@@ -2,10 +2,10 @@
     <p>{{ $this->i18n->t('Please sign in.') }}</p>
 @else
 <div class="grid gap-4 lg:grid-cols-4">
-@foreach ($this->columns() as $status => $orders)
-    <section data-key="{{ $status }}" class="rounded-2xl bg-stone-100 p-3">
+@foreach ($this->columns() as [$status, $orders])
+    <section data-key="{{ $status->value }}" class="rounded-2xl bg-stone-100 p-3">
         <h2 class="mb-3 flex justify-between font-semibold">
-            {{ Bakery\Ordering\OrderStatus::from($status)->label($this->i18n) }}
+            {{ $status->label($this->i18n) }}
             <span class="rounded-full bg-white px-2 text-sm">{{ count($orders) }}</span>
         </h2>
         <ul class="grid gap-3">
@@ -15,7 +15,7 @@
                 <p class="font-medium">{{ $order->customerName }}</p>
                 <ul class="mt-1 text-sm">
                 @foreach ($order->lines as $line)
-                    <li>{{ $line['quantity'] }} × {{ $line['name'] }}</li>
+                    <li>{{ $line->quantity }} × {{ $line->name }}</li>
                 @endforeach
                 </ul>
                 <p class="mt-1 text-sm tabular-nums">{{ $this->price($order->totalCents) }}</p>

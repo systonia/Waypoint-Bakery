@@ -39,7 +39,7 @@ final class OrderBoard
     /** A live component checks the user itself: /_live is one route for every component. */
     private function isStaff(): bool
     {
-        return in_array($this->connection->request->jwt['role'] ?? null, ['owner', 'staff'], true);
+        return User::fromJwt($this->connection->request->jwt)?->isStaff() ?? false;
     }
 
     private function staffOnly(): void
@@ -49,17 +49,14 @@ final class OrderBoard
         }
     }
 
-    /** @return array<string, list<Order>> status => orders, in the order of the steps */
+    /** @return list<array{OrderStatus, list<Order>}> each step with its orders */
     private function columns(): array
     {
-        $columns = [];
-        foreach ([OrderStatus::Pending, OrderStatus::Received, OrderStatus::Baking, OrderStatus::Ready] as $status) {
-            $columns[$status->value] = [];
-        }
-        foreach ($this->feed->open() as $order) {
-            $columns[$order->status->value][] = $order;
-        }
-        return $columns;
+        $open = $this->feed->open();
+        return array_map(
+            fn (OrderStatus $status) => [$status, array_values(array_filter($open, fn (Order $order) => $order->status === $status))],
+            [OrderStatus::Pending, OrderStatus::Received, OrderStatus::Baking, OrderStatus::Ready],
+        );
     }
 
     private function day(string $date): string

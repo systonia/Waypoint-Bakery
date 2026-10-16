@@ -2,7 +2,7 @@
 
 namespace Bakery\Backoffice;
 
-use Waypoint\Attributes\{Controller, Get, Inject, Post};
+use Waypoint\Attributes\{Controller, Get, Ignore, Inject, Post};
 use Waypoint\Environment;
 use Waypoint\Flash\Flash;
 use Waypoint\Http\{Redirect, Request, Response, View};
@@ -11,6 +11,7 @@ use Waypoint\JWT;
 
 /** Signing in to the back office: a classic form post, a JWT in an HttpOnly cookie, a flash message. */
 #[Controller('/backoffice')]
+#[Ignore]
 final class SessionController
 {
     #[Inject]
@@ -43,8 +44,8 @@ final class SessionController
             $res->status(422);
             return new View('Backoffice/Login', ['form' => $form, 'errors' => $form->errors], layout: '_Backoffice.php');
         }
-        $res->withCookie('session', JWT::encode(['sub' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]), secure: !$this->env->isDev());
-        $this->flash->success($this->translator->t('Welcome, {name}.', ['name' => $user['name']]));
+        $res->withCookie('session', JWT::encode($user->claims()), secure: !$this->env->isDev());
+        $this->flash->success($this->translator->t('Welcome, {name}.', ['name' => $user->name]));
         return new Redirect('/backoffice', 303);
     }
 

@@ -25,6 +25,12 @@ enum OrderStatus: string
         };
     }
 
+    /** Reserved, waiting for the customer to confirm it. */
+    public function isPending(): bool
+    {
+        return $this === self::Pending;
+    }
+
     public function isOpen(): bool
     {
         return $this !== self::PickedUp && $this !== self::Cancelled;

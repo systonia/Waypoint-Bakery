@@ -7,7 +7,7 @@ use Bakery\Ordering\Orders;
 use Bakery\Pickup\{Holidays, LastKnown, OpeningHours, PickupCalendar, Weather};
 use Closure;
 use DateTimeImmutable;
-use Waypoint\Attributes\{Controller, Get, Inject};
+use Waypoint\Attributes\{Controller, Get, Ignore, Inject};
 use Waypoint\Exceptions\NotFoundException;
 use Waypoint\Flash\Flash;
 use Waypoint\Http\{Redirect, Request, Response, View};
@@ -15,6 +15,7 @@ use Waypoint\I18n\Translator;
 
 /** The storefront's pages. They are plain Waypoint views; the parts that react to clicks are live components in them. */
 #[Controller]
+#[Ignore]
 final class ShopController
 {
     #[Inject]
@@ -44,7 +45,7 @@ final class ShopController
     #[Get('/')]
     public function catalog(): View
     {
-        return new View('Shop/Catalog', ['products' => $this->products->all()]);
+        return new View('Shop/Catalog', $this->products->all());
     }
 
     /**
@@ -96,15 +97,15 @@ final class ShopController
             throw new NotFoundException("No product $slug");
         }
         $today = new DateTimeImmutable('today');
-        return new View('Shop/Product', [
-            'product' => $product,
-            'days' => PickupCalendar::days($today, $hours, $holidays ?? [], 3),
-            'closed' => array_filter($holidays ?? [], fn (string $date) => $date <= $today->modify('+' . PickupCalendar::DAYS_AHEAD . ' days')->format('Y-m-d'), ARRAY_FILTER_USE_KEY),
-            'holidaysKnown' => $holidays !== null,
-            'weather' => $weather,
-            'live' => $live,
-            'timings' => $timings,
-        ]);
+        return new View('Shop/Product', new ProductPage(
+            product: $product,
+            days: PickupCalendar::days($today, $hours, $holidays ?? [], 3),
+            closed: array_filter($holidays ?? [], fn (string $date) => $date <= $today->modify('+' . PickupCalendar::DAYS_AHEAD . ' days')->format('Y-m-d'), ARRAY_FILTER_USE_KEY),
+            holidaysKnown: $holidays !== null,
+            weather: $weather,
+            live: $live,
+            timings: $timings,
+        ));
     }
 
     #[Get('/cart')]
@@ -114,14 +115,13 @@ final class ShopController
             hours: fn () => $this->hours->week(),
             holidays: fn () => $this->holidays->upcoming(),
         );
-        return new View('Shop/Cart', ['days' => PickupCalendar::days(new DateTimeImmutable('today'), $hours, $holidays ?? [])]);
+        return new View('Shop/Cart', PickupCalendar::days(new DateTimeImmutable('today'), $hours, $holidays ?? []));
     }
 
     #[Get('/orders/{code}')]
     public function order(string $code): View
     {
-        $order = $this->orders->byCode($code) ?? throw new NotFoundException('No such order');
-        return new View('Shop/Order', ['order' => $order]);
+        return new View('Shop/Order', $this->orders->byCode($code) ?? throw new NotFoundException('No such order'));
     }
 
     /** Where the checkout sends the browser: a message for the next page, then the order itself. */

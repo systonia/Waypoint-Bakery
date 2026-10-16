@@ -21,10 +21,10 @@ final class Cart
     #[Inject]
     private Postgres $db;
 
-    /** @var array<int, array{product: Product, quantity: int}>|null product id => line, loaded on first use */
+    /** @var array<int, CartLine>|null product id => line, loaded on first use */
     private ?array $lines = null;
 
-    /** @return array<int, array{product: Product, quantity: int}> */
+    /** @return array<int, CartLine> product id => line */
     public function lines(): array
     {
         if ($this->lines === null) {
@@ -34,7 +34,7 @@ final class Cart
                 [$this->id()],
             );
             foreach ($rows as $row) {
-                $this->lines[(int) $row['id']] = ['product' => Product::fromRow($row), 'quantity' => (int) $row['quantity']];
+                $this->lines[(int) $row['id']] = new CartLine(Product::fromRow($row), (int) $row['quantity']);
             }
         }
         return $this->lines;
@@ -42,7 +42,7 @@ final class Cart
 
     public function quantity(int $product): int
     {
-        return $this->lines()[$product]['quantity'] ?? 0;
+        return $this->lines()[$product]->quantity ?? 0;
     }
 
     /** Adds one more, as long as the bakery has it. */
@@ -64,7 +64,7 @@ final class Cart
                 $this->db->execute('DELETE FROM cart_lines WHERE cart = $1 AND product_id = $2', [$id, $product->id]);
             }
         } else {
-            $this->lines[$product->id] = ['product' => $product, 'quantity' => $quantity];
+            $this->lines[$product->id] = new CartLine($product, $quantity);
             if ($id !== null) {
                 $this->db->execute(
                     'INSERT INTO cart_lines (cart, product_id, quantity) VALUES ($1, $2, $3)
@@ -78,18 +78,18 @@ final class Cart
 
     public function count(): int
     {
-        return array_sum(array_column($this->lines(), 'quantity'));
+        return array_sum($this->quantities());
     }
 
     public function total(): int
     {
-        return array_sum(array_map(fn (array $line): int => $line['product']->priceCents * $line['quantity'], $this->lines()));
+        return array_sum(array_map(fn (CartLine $line): int => $line->totalCents(), $this->lines()));
     }
 
     /** @return array<int, int> product id => quantity, for Orders::place() */
     public function quantities(): array
     {
-        return array_map(fn (array $line): int => $line['quantity'], $this->lines());
+        return array_map(fn (CartLine $line): int => $line->quantity, $this->lines());
     }
 
     public function clear(): void

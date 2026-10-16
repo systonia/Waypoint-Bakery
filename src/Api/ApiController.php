@@ -3,7 +3,7 @@
 namespace Bakery\Api;
 
 use Bakery\Backoffice\Users;
-use Bakery\Catalog\{Product, Products};
+use Bakery\Catalog\Products;
 use Bakery\Ordering\{Order, OrderFeed, OrderStatus, Orders};
 use Waypoint\Attributes\{Authenticated, Body, Controller, Get, Inject, Patch, Post, SkipCsrf, Summary, Tags, Throws, Version};
 use Waypoint\Exceptions\{NotFoundException, UnauthorizedException, ValidationException};
@@ -30,7 +30,6 @@ final class ApiController
     #[Inject]
     private OrderFeed $feed;
 
-    /** @return array{token: string} */
     #[Post('/tokens')]
     #[Tags(['Sign-in'])]
     #[Summary('Exchange email and password for a bearer token')]
@@ -39,39 +38,32 @@ final class ApiController
         status: 401,
         description: 'Wrong email or password'
     )]
-    public function token(#[Body] Credentials $credentials): array
+    public function token(#[Body] Credentials $credentials): BearerToken
     {
         $user = $this->users->verify($credentials->email, $credentials->password)
             ?? throw new UnauthorizedException('Wrong email or password.');
-        return ['token' => JWT::encode(['sub' => $user['id'], 'name' => $user['name'], 'role' => $user['role']])];
+        return new BearerToken(JWT::encode($user->claims()));
     }
 
-    /** @return list<array<string, mixed>> */
+    /** @return list<ProductSummary> */
     #[Get('/products')]
     #[Tags(['Products'])]
     #[Summary('The range with prices in cents and what is left')]
     public function products(): array
     {
-        return array_map(fn (Product $p) => [
-            'slug' => $p->slug,
-            'name' => $p->name,
-            'category' => $p->category,
-            'priceCents' => $p->priceCents,
-            'stock' => $p->stock,
-        ], $this->products->all());
+        return array_map(ProductSummary::of(...), $this->products->all());
     }
 
-    /** @return list<array<string, mixed>> */
+    /** @return list<OrderSummary> */
     #[Get('/orders')]
     #[Authenticated]
     #[Tags(['Orders'])]
     #[Summary('Every order that is not picked up or cancelled')]
     public function openOrders(): array
     {
-        return array_map(self::json(...), $this->orders->open());
+        return array_map(OrderSummary::of(...), $this->orders->open());
     }
 
-    /** @return array<string, mixed> */
     #[Get('/orders/{code}')]
     #[Authenticated]
     #[Tags(['Orders'])]
@@ -80,16 +72,12 @@ final class ApiController
         exception: NotFoundException::class,
         status: 404
     )]
-    public function order(string $code): array
+    public function order(string $code): OrderSummary
     {
-        return self::json($this->orders->byCode($code) ?? throw new NotFoundException("No order $code"));
+        return OrderSummary::of($this->find($code));
     }
 
-    /**
-     * Moves the order one step on; the customer's page and every order board show it at once.
-     *
-     * @return array<string, mixed>
-     */
+    /** Moves the order one step on; the customer's page and every order board show it at once. */
     #[Patch('/orders/{code}')]
     #[Authenticated]
     #[Tags(['Orders'])]
@@ -103,26 +91,18 @@ final class ApiController
         status: 422,
         description: 'Not the next step of this order'
     )]
-    public function advance(string $code, #[Body] StatusChange $change): array
+    public function advance(string $code, #[Body] StatusChange $change): OrderSummary
     {
-        $order = $this->orders->byCode($code) ?? throw new NotFoundException("No order $code");
+        $order = $this->find($code);
         if ($order->status->next() !== OrderStatus::from($change->status) || !$this->orders->advance($order->id, $order->status)) {
             throw new ValidationException(errors: ['status' => "The order is {$order->status->value}; its next step is " . ($order->status->next()->value ?? 'none') . '.']);
         }
         $this->feed->announce($order->id);
-        return self::json($this->orders->byId($order->id) ?? $order);
+        return OrderSummary::of($this->find($code));
     }
 
-    /** @return array<string, mixed> */
-    private static function json(Order $order): array
+    private function find(string $code): Order
     {
-        return [
-            'code' => $order->code,
-            'customer' => $order->customerName,
-            'pickupDate' => $order->pickupDate,
-            'status' => $order->status->value,
-            'totalCents' => $order->totalCents,
-            'lines' => $order->lines,
-        ];
+        return $this->orders->byCode($code) ?? throw new NotFoundException("No order $code");
     }
 }

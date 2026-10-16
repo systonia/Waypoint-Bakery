@@ -1,5 +1,5 @@
 <?php
-/** @var array{products: list<Bakery\Catalog\Product>} $model */
+/** @var list<Bakery\Catalog\Product> $model */
 use Bakery\Format;
 
 $locale = $this->locale();
@@ -8,7 +8,7 @@ $locale = $this->locale();
 <h1 class="text-3xl font-semibold"><?= $this->t('Baked this morning') ?></h1>
 <p class="mt-2 text-stone-600"><?= $this->t('Put together your order and pick it up in the shop on a day that suits you.') ?></p>
 <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-<?php foreach ($model['products'] as $product): ?>
+<?php foreach ($model as $product): ?>
     <li class="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-200">
         <a href="/products/<?= $product->slug ?>" class="block">
             <img src="/products/<?= $product->picture ?>" alt="" class="aspect-[4/3] w-full rounded-xl bg-amber-50 object-contain p-4">

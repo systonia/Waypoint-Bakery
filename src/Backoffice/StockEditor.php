@@ -28,7 +28,7 @@ final class StockEditor
 
     public function set(Product $product, string $stock): void
     {
-        if (!in_array($this->connection->request->jwt['role'] ?? null, ['owner', 'staff'], true)) {
+        if (!(User::fromJwt($this->connection->request->jwt)?->isStaff() ?? false)) {
             throw new ForbiddenException('Only for the people in the bakery');
         }
         $this->products->setStock($product->id, (int) $stock);

@@ -1,19 +1,9 @@
 <?php
-/**
- * @var array{
- *     product: Bakery\Catalog\Product,
- *     days: list<string>,
- *     closed: array<string, array{en: string, de: string}>,
- *     holidaysKnown: bool,
- *     weather: array<string, array{code: int, max: float, rain: int}>|null,
- *     live: bool,
- *     timings: array<string, float>
- * } $model
- */
+/** @var Bakery\Shop\ProductPage $model */
 use Bakery\Format;
 
 $locale = $this->locale();
-$product = $model['product'];
+$product = $model->product;
 $sky = fn (int $code): string => match (true) {
     $code === 0 => '☀️ ' . $this->t('Sunny'),
     $code <= 3 => '⛅ ' . $this->t('Some clouds'),
@@ -41,28 +31,28 @@ $sky = fn (int $code): string => match (true) {
 
         <h2 class="mt-8 text-lg font-semibold"><?= $this->t('Next pickup days') ?></h2>
         <ul class="mt-2 divide-y divide-stone-200 rounded-xl bg-white ring-1 ring-stone-200">
-            <?php foreach ($model['days'] as $day): ?>
+            <?php foreach ($model->days as $day): ?>
                 <li class="flex items-center justify-between px-4 py-2">
                     <span class="font-medium"><?= Format::day($day, $locale) ?></span>
-                    <?php if (isset($model['weather'][$day])): $weather = $model['weather'][$day] ?>
+                    <?php if (isset($model->weather[$day])): $weather = $model->weather[$day] ?>
                         <span class="text-sm text-stone-600"><?= $sky($weather['code']) ?>, <?= round($weather['max']) ?> °C, <?= $this->t('{chance}% rain', ['chance' => $weather['rain']]) ?></span>
                     <?php endif ?>
                 </li>
             <?php endforeach ?>
         </ul>
-        <?php if ($model['weather'] === null): ?>
+        <?php if ($model->weather === null): ?>
             <p class="mt-2 text-sm text-stone-500"><?= $this->t('The weather forecast is not available right now.') ?></p>
         <?php endif ?>
-        <?php if (!$model['holidaysKnown']): ?>
+        <?php if (!$model->holidaysKnown): ?>
             <p class="mt-2 text-sm text-stone-500"><?= $this->t('We could not check the public holidays just now; on a holiday the shop is closed.') ?></p>
         <?php endif ?>
-        <?php foreach ($model['closed'] as $date => $holiday): ?>
+        <?php foreach ($model->closed as $date => $holiday): ?>
             <p class="mt-2 text-sm text-stone-600"><?= $this->t('Closed on {day}: {holiday}', ['day' => Format::day($date, $locale), 'holiday' => $holiday[$locale] ?? $holiday['en']]) |> htmlspecialchars(...) ?></p>
         <?php endforeach ?>
 
-        <?php if ($this->env->isDev()): $t = $model['timings'] ?>
+        <?php if ($this->env->isDev()): $t = $model->timings ?>
             <p class="mt-8 rounded-lg bg-stone-100 p-3 font-mono text-xs text-stone-600" data-timings>
-                <?= $model['live'] ? sprintf(
+                <?= $model->live ? sprintf(
                     'Live: loaded in %.0f ms with Tenma::all(): product %.0f ms, opening hours %.0f ms, holidays %.0f ms, weather %.0f ms. One after another: about %.0f ms.',
                     $t['total'], $t['product'], $t['hours'], $t['holidays'], $t['weather'],
                     $t['product'] + $t['hours'] + $t['holidays'] + $t['weather'],
