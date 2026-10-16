@@ -1,0 +1,7 @@
+{
+    "DATABASE_URL": "postgres://localhost/bakery_test",
+    "JWT_SECRET": "test-secret-for-the-session-cookie-0123456789",
+    "CSRF_SECRET": "test-secret-for-the-csrf-tokens-0123456789ab",
+    "EXPIRY_INTERVAL": 0,
+    "SALES_INTERVAL": 0
+}

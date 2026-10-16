@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="tests/bootstrap.php" colors="true" cacheDirectory=".phpunit.cache">
+  <source>
+    <include>
+      <directory>src</directory>
+    </include>
+  </source>
+  <php>
+    <env name="APP_ENV" value="test" force="true"/>
+  </php>
+  <testsuites>
+    <testsuite name="Bakery">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>

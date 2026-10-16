@@ -1,0 +1,4 @@
+{
+    "JWT_SECRET": "development-only-secret-for-the-session-cookie",
+    "CSRF_SECRET": "development-only-secret-for-the-csrf-tokens-0"
+}
