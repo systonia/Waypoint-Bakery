@@ -4,6 +4,7 @@
 
 use Bakery\Backoffice\SalesReport;
 use Bakery\Ordering\{OrderFeed, Orders};
+use Bakery\Pickup\LastKnown;
 use Waypoint\Environment;
 use Waypoint\Logger;
 
@@ -44,5 +45,13 @@ if ($salesInterval > 0) {
     Tenma::async($aggregate);
     Tenma::setInterval($aggregate, $salesInterval);
 }
+
+// The product page reads the holidays and the weather from this worker's memory (LastKnown). The first load runs
+// in a task, so serving starts at once; the timers keep both fresh.
+$lastKnown = $app->get(LastKnown::class);
+Tenma::async($lastKnown->refreshHolidays(...));
+Tenma::async($lastKnown->refreshWeather(...));
+Tenma::setInterval($lastKnown->refreshHolidays(...), (float) $env->get('HOLIDAYS_INTERVAL', 86400));
+Tenma::setInterval($lastKnown->refreshWeather(...), (float) $env->get('WEATHER_INTERVAL', 900));
 
 $app->serve();

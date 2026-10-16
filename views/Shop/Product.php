@@ -6,6 +6,7 @@
  *     closed: array<string, array{en: string, de: string}>,
  *     holidaysKnown: bool,
  *     weather: array<string, array{code: int, max: float, rain: int}>|null,
+ *     live: bool,
  *     timings: array<string, float>
  * } $model
  */
@@ -61,10 +62,13 @@ $sky = fn (int $code): string => match (true) {
 
         <?php if ($this->env->isDev()): $t = $model['timings'] ?>
             <p class="mt-8 rounded-lg bg-stone-100 p-3 font-mono text-xs text-stone-600" data-timings>
-                <?= sprintf(
-                    'Loaded in %.0f ms with Tenma::all(): product %.0f ms, opening hours %.0f ms, holidays %.0f ms, weather %.0f ms. One after another: about %.0f ms.',
+                <?= $model['live'] ? sprintf(
+                    'Live: loaded in %.0f ms with Tenma::all(): product %.0f ms, opening hours %.0f ms, holidays %.0f ms, weather %.0f ms. One after another: about %.0f ms.',
                     $t['total'], $t['product'], $t['hours'], $t['holidays'], $t['weather'],
                     $t['product'] + $t['hours'] + $t['holidays'] + $t['weather'],
+                ) : sprintf(
+                    'Cached: loaded in %.0f ms: product %.0f ms, opening hours %.0f ms, holidays and weather from memory. Add ?live to fetch them on this request.',
+                    $t['total'], $t['product'], $t['hours'],
                 ) ?>
             </p>
         <?php endif ?>

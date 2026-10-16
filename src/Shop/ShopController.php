@@ -4,13 +4,13 @@ namespace Bakery\Shop;
 
 use Bakery\Catalog\Products;
 use Bakery\Ordering\Orders;
-use Bakery\Pickup\{Holidays, OpeningHours, PickupCalendar, Weather};
+use Bakery\Pickup\{Holidays, LastKnown, OpeningHours, PickupCalendar, Weather};
 use Closure;
 use DateTimeImmutable;
 use Waypoint\Attributes\{Controller, Get, Inject};
 use Waypoint\Exceptions\NotFoundException;
 use Waypoint\Flash\Flash;
-use Waypoint\Http\{Redirect, Response, View};
+use Waypoint\Http\{Redirect, Request, Response, View};
 use Waypoint\I18n\Translator;
 
 /** The storefront's pages. They are plain Waypoint views; the parts that react to clicks are live components in them. */
@@ -30,6 +30,9 @@ final class ShopController
     private Weather $weather;
 
     #[Inject]
+    private LastKnown $lastKnown;
+
+    #[Inject]
     private Orders $orders;
 
     #[Inject]
@@ -45,13 +48,19 @@ final class ShopController
     }
 
     /**
-     * The product with its next pickup days, each with the weather. Four waits (two queries, two web services)
-     * run at the same time with Tenma::all(), so the page takes as long as the slowest of them, not their sum.
-     * Server-Timing shows each one in the browser's developer tools.
+     * The product with its next pickup days, each with the weather. Two versions side by side:
+     *
+     * - cached (the default): the holidays and the weather come from this worker's memory (LastKnown, refreshed by
+     *   timers in index.php), so the page only waits for Postgres;
+     * - live (?live): all four sources are fetched on this request with Tenma::all(), so the page takes as long as
+     *   the slowest of them, not their sum.
+     *
+     * Server-Timing says which version ran and how long each source took ("cache" for the ones from memory).
      */
     #[Get('/products/{slug}')]
-    public function product(string $slug, Response $res): View
+    public function product(string $slug, Request $req, Response $res): View
     {
+        $live = $req->query('live') !== null;
         $timings = [];
         $timed = function (string $name, Closure $work) use (&$timings): Closure {
             return function () use ($name, $work, &$timings): mixed {
@@ -63,15 +72,25 @@ final class ShopController
                 }
             };
         };
+        $sources = [
+            'product' => $timed('product', fn () => $this->products->bySlug($slug)),
+            'hours' => $timed('hours', fn () => $this->hours->week()),
+        ];
+        if ($live) {
+            $sources['holidays'] = $timed('holidays', fn () => $this->holidays->upcoming());
+            $sources['weather'] = $timed('weather', fn () => $this->weather->week());
+        }
         $started = hrtime(true);
-        ['product' => $product, 'hours' => $hours, 'holidays' => $holidays, 'weather' => $weather] = \Tenma::all(
-            product: $timed('product', fn () => $this->products->bySlug($slug)),
-            hours: $timed('hours', fn () => $this->hours->week()),
-            holidays: $timed('holidays', fn () => $this->holidays->upcoming()),
-            weather: $timed('weather', fn () => $this->weather->week()),
-        );
+        $loaded = \Tenma::all(...$sources);
         $timings['total'] = (hrtime(true) - $started) / 1e6;
-        $res->withHeader('Server-Timing', implode(', ', array_map(fn (string $name, float $ms) => sprintf('%s;dur=%.1f', $name, $ms), array_keys($timings), $timings)));
+        ['product' => $product, 'hours' => $hours] = $loaded;
+        $holidays = $live ? $loaded['holidays'] : $this->lastKnown->holidays;
+        $weather = $live ? $loaded['weather'] : $this->lastKnown->weather;
+        $res->withHeader('Server-Timing', implode(', ', [
+            'version;desc=' . ($live ? 'live' : 'cached'),
+            ...array_map(fn (string $name, float $ms) => sprintf('%s;dur=%.1f', $name, $ms), array_keys($timings), $timings),
+            ...($live ? [] : ['holidays;desc=cache', 'weather;desc=cache']),
+        ]));
 
         if ($product === null) {
             throw new NotFoundException("No product $slug");
@@ -83,6 +102,7 @@ final class ShopController
             'closed' => array_filter($holidays ?? [], fn (string $date) => $date <= $today->modify('+' . PickupCalendar::DAYS_AHEAD . ' days')->format('Y-m-d'), ARRAY_FILTER_USE_KEY),
             'holidaysKnown' => $holidays !== null,
             'weather' => $weather,
+            'live' => $live,
             'timings' => $timings,
         ]);
     }

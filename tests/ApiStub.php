@@ -7,10 +7,15 @@ use Tenma\Http\{Request, Response};
 
 /**
  * Answers like date.nager.at and api.open-meteo.com, under a prefix that sets how: /fast/..., /slow/... (300 ms
- * late, like the real services on a bad day) or /down/... (503).
+ * late, like the real services on a bad day) or /down/... (503). Counts the requests it answers, and the tests may
+ * change the forecast's temperature to see a refresh arrive.
  */
 final class ApiStub
 {
+    public static int $calls = 0;
+
+    public static float $temperature = 21.4;
+
     /** The holiday the fake knows: the day after tomorrow, so it falls among the pickup days. */
     public static function holiday(): string
     {
@@ -19,6 +24,7 @@ final class ApiStub
 
     public function __invoke(Request $request): Response
     {
+        self::$calls++;
         [, $mode, $path] = explode('/', $request->path, 3) + [2 => ''];
         if ($mode === 'down') {
             return new Response('overloaded', 503);
@@ -37,7 +43,7 @@ final class ApiStub
             return Response::json(['daily' => [
                 'time' => $days,
                 'weather_code' => array_fill(0, 7, 0),
-                'temperature_2m_max' => array_fill(0, 7, 21.4),
+                'temperature_2m_max' => array_fill(0, 7, self::$temperature),
                 'precipitation_probability_max' => array_fill(0, 7, 10),
             ]]);
         }

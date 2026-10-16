@@ -17,6 +17,8 @@ abstract class AppTestCase extends TestCase
     {
         parent::setUp();
         $this->useApis('fast');
+        ApiStub::$calls = 0;
+        ApiStub::$temperature = 21.4;
         require __DIR__ . '/../app.php';
         $this->service(DatabaseTasks::class)->reset();
     }

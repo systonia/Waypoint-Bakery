@@ -5,10 +5,10 @@ Sonnenkorn is a made-up bakery in Freiburg with an online shop: customers put to
 It is the example application of [Tenma](https://github.com/systonia/Tenma), [Waypoint](https://github.com/systonia/Waypoint), [Waypoint Live](https://github.com/systonia/Waypoint-Live) and the Waypoint plugins, and the running example of their documentation. It is small enough to read in an evening and real enough to run a shop:
 
 - **Storefront** in English and German: catalog, product page, cart and checkout, order page.
-- **Product page** that loads the product from Postgres, the public holidays from [date.nager.at](https://date.nager.at) and the pickup-day weather from [open-meteo.com](https://open-meteo.com) at the same time, and carries on when a service is down.
+- **Product page** with the public holidays from [date.nager.at](https://date.nager.at) and the pickup-day weather from [open-meteo.com](https://open-meteo.com), in two versions to compare: from the worker's memory, refreshed in the background (the default), or fetched on every request together with the product from Postgres (`?live`). Both carry on when a service is down.
 - **Live order page**: the customer sees each step (received, in the oven, ready, picked up) the moment the bakery takes it.
 - **Back office** behind a sign-in with two roles: a live order board, the stock, sales charts, exports as CSV and XLSX, a JSON API with an OpenAPI document.
-- **Background jobs** in the same process: unconfirmed orders are cancelled after 15 minutes and their stock freed; the sales for the charts are aggregated every five minutes.
+- **Background jobs** in the same process: unconfirmed orders are cancelled after 15 minutes and their stock freed; the sales for the charts are aggregated every five minutes; the weather is refreshed every 15 minutes and the holidays once a day.
 
 ```bash
 tenma --watch index.php      # http://localhost:8080, back office at /backoffice
@@ -63,7 +63,8 @@ Each part of the shop, the files it lives in, and the page of the documentation 
 |---|---|---|
 | Pages as controllers and views | [`src/Shop/ShopController.php`](src/Shop/ShopController.php), [`views/Shop/`](views/Shop), [`views/_Layout.php`](views/_Layout.php) | Waypoint [Routing](https://github.com/systonia/Waypoint/blob/main/docs/guides/routing.md), [Views](https://github.com/systonia/Waypoint/blob/main/docs/guides/views.md) |
 | Queries that wait without blocking the worker | [`src/Catalog/Products.php`](src/Catalog/Products.php), [`src/Ordering/Orders.php`](src/Ordering/Orders.php) | Tenma [Databases and messages](https://github.com/systonia/Tenma/blob/main/docs/guides/database.md) |
-| The product page's four sources at once, `Server-Timing` and the timing note in development | `ShopController::product()`, [`views/Shop/Product.php`](views/Shop/Product.php) | Tenma [Fibers and asynchronous work](https://github.com/systonia/Tenma/blob/main/docs/guides/async.md#several-things-at-once) |
+| The product page, cached: holidays and weather from the worker's memory | `ShopController::product()`, [`src/Pickup/LastKnown.php`](src/Pickup/LastKnown.php), timers in [`index.php`](index.php) | Tenma [Timers](https://github.com/systonia/Tenma/blob/main/docs/guides/async.md#timers) |
+| The product page, live (`?live`): four sources at once, `Server-Timing` and the timing note in development | `ShopController::product()`, [`views/Shop/Product.php`](views/Shop/Product.php) | Tenma [Fibers and asynchronous work](https://github.com/systonia/Tenma/blob/main/docs/guides/async.md#several-things-at-once) |
 | Web services with a timeout and a fallback | [`src/Pickup/Holidays.php`](src/Pickup/Holidays.php), [`src/Pickup/Weather.php`](src/Pickup/Weather.php) | Tenma [Outgoing HTTP](https://github.com/systonia/Tenma/blob/main/docs/guides/fetch.md#errors) |
 | Pickup days: open, not a holiday, within a week | [`src/Pickup/PickupCalendar.php`](src/Pickup/PickupCalendar.php) | |
 | English and German, `?lang=de`, a cookie, the browser's language | [`lang/de.json`](lang/de.json), `$this->t()` in [`views/`](views) | I18n [Writing translatable text](https://github.com/systonia/Waypoint-I18n/blob/main/docs/guides/translating-text.md), [The locale of a request](https://github.com/systonia/Waypoint-I18n/blob/main/docs/guides/locale.md) |
@@ -85,19 +86,33 @@ Each part of the shop, the files it lives in, and the page of the documentation 
 | Sales charts | `BackofficeController::sales()`, [`views/Backoffice/Sales.php`](views/Backoffice/Sales.php), [`src/Backoffice/SalesReport.php`](src/Backoffice/SalesReport.php) | Charts [Building charts](https://github.com/systonia/Waypoint-Charts/blob/main/docs/guides/charts.md) |
 | Orders as a table, `orders.csv` and `orders.xlsx` | `BackofficeController::export()` | Export [Building a sheet](https://github.com/systonia/Waypoint-Export/blob/main/docs/guides/sheets.md), [Tables in views](https://github.com/systonia/Waypoint-Export/blob/main/docs/guides/views.md) |
 | JSON API with bearer tokens, `/openapi/swagger.html` | [`src/Api/ApiController.php`](src/Api/ApiController.php) | Waypoint [OpenAPI](https://github.com/systonia/Waypoint/blob/main/docs/guides/openapi.md) |
-| Cancelling unconfirmed orders, aggregating sales | `Orders::expireUnconfirmed()`, `SalesReport::aggregate()`, timers in [`index.php`](index.php) | Tenma [Timers](https://github.com/systonia/Tenma/blob/main/docs/guides/async.md#timers) |
+| Cancelling unconfirmed orders, aggregating sales, refreshing weather and holidays | `Orders::expireUnconfirmed()`, `SalesReport::aggregate()`, `LastKnown`, timers in [`index.php`](index.php) | Tenma [Timers](https://github.com/systonia/Tenma/blob/main/docs/guides/async.md#timers) |
 
 ## Why a long-running process
 
-Tenma runs `index.php` once per worker and keeps what it built: the routes and the container, compiled templates, the translations, a pool of open Postgres connections. Every request then runs in a fiber of its own, and while one waits, the worker serves others. The bakery leans on that in four places.
+Tenma runs `index.php` once per worker and keeps what it built: the routes and the container, compiled templates, the translations, a pool of open Postgres connections. Every request then runs in a fiber of its own, and while one waits, the worker serves others. The bakery leans on that in five places.
 
-**Waiting for several things at once.** The product page needs the product, the opening hours, the holidays and the forecast. In a fiber each of them is one call that simply returns its result; `Tenma::all()` starts all four together, so the page takes as long as the slowest source, not the sum. `Server-Timing` shows each wait in the browser's developer tools, and under `tenma --watch` the page prints it:
+**Memory between requests.** The product page shows the pickup days with the public holidays and the weather. Both come from web services that need anything from 20 ms to over a second to answer, and both change rarely: the forecast a few times an hour, the holidays a few times a year. So each worker keeps their last good answer in memory ([`LastKnown`](src/Pickup/LastKnown.php)) and refreshes it in the background: `index.php` loads both once at start, in a task so that serving begins at once, then sets two timers with `Tenma::setInterval()` (weather every 15 minutes, holidays once a day; `WEATHER_INTERVAL` and `HOLIDAYS_INTERVAL` in `config.json`). The page reads from memory and only waits for Postgres. Until the first answer arrives, or while a service is down, it shows the last good data, or the note that the forecast or the holidays are not available. This is the normal choice in a long-running process: the memory survives between requests, the refresh runs in the same process as the pages, and no external cache service is needed.
+
+**Waiting for several things at once.** The page can also fetch everything on the request, as `/products/<slug>?live` does: the product, the opening hours, the holidays and the forecast. In a fiber each of them is one call that simply returns its result; `Tenma::all()` starts all four together, so the page takes as long as the slowest source, not the sum. A service that is down costs at most its timeout (`API_TIMEOUT`, 2.5 s) and the page says so instead of failing.
+
+**Comparing the two.** Both versions run side by side: open `/products/croissant` and `/products/croissant?live`. `Server-Timing` in the browser's developer tools says which version ran (`version;desc=cached` or `live`) and the time per source, `cache` for the ones read from memory. Under `tenma --watch` the page prints it too:
 
 ```text
-Loaded in 44 ms with Tenma::all(): product 1 ms, opening hours 1 ms, holidays 17 ms, weather 44 ms. One after another: about 62 ms.
+Cached: loaded in 1 ms: product 1 ms, opening hours 1 ms, holidays and weather from memory. Add ?live to fetch them on this request.
+Live: loaded in 454 ms with Tenma::all(): product 1 ms, opening hours 1 ms, holidays 14 ms, weather 454 ms. One after another: about 470 ms.
 ```
 
-`tenma bin/bench.php 20` measures it against the real services: on a good connection about 20 ms instead of 37 ms, and on a day when a service needs 300 ms the saving is the full 300 ms. A service that is down costs at most its timeout (`API_TIMEOUT`, 2.5 s) and the page says so instead of failing.
+`tenma bin/bench.php 20` measures three ways against the real services: cached, live with `Tenma::all()`, and live one after another. On a day when open-meteo answered in about 450 ms:
+
+```text
+20 rounds, median
+  cached:               1.3 ms
+  live, together:     451.9 ms
+  live, one by one:   473.9 ms
+```
+
+When the services are quick, live with `Tenma::all()` takes about 25 ms against 45 ms one after another, and the cached page still about 1 ms.
 
 **State between clicks.** A live component is an object in the worker's memory for as long as its tab is open. The cart, the form with its errors and the board need no session store and no client-side code: the browser sends the click over its WebSocket, the method runs, the new HTML goes back.
 
@@ -122,7 +137,7 @@ Settings come from Waypoint's `Environment`, in this order, the later one winnin
 
 | File | In git | Holds |
 |---|---|---|
-| `config.json` | yes | the bakery's settings: location, holiday region, minutes until an order expires, job intervals |
+| `config.json` | yes | the bakery's settings: location, holiday region, minutes until an order expires, job and refresh intervals |
 | `config.development.json` | yes | secrets that are only good for development; `tenma --watch` is `APP_ENV=development` |
 | `config.test.json` | yes | the test database and secrets |
 | `.env` | no | `JWT_SECRET`, `CSRF_SECRET` (`php -r 'echo bin2hex(random_bytes(32)), "\n";'`), `APP_ENV`, `DATABASE_URL` in production |
@@ -137,6 +152,7 @@ Since files win over the process environment, `config.json` holds nothing that a
 | `API_TIMEOUT` | `2.5` | seconds per web service |
 | `UNCONFIRMED_MINUTES` | `15` | how long a reservation waits for its confirmation |
 | `EXPIRY_INTERVAL`, `SALES_INTERVAL` | `30`, `300` | seconds between the jobs' runs; `0` turns a job off |
+| `WEATHER_INTERVAL`, `HOLIDAYS_INTERVAL` | `900`, `86400` | seconds between refreshes of the weather and the holidays in memory |
 | `OPENAPI` | `true` | serve `/openapi/spec.json` and `/openapi/swagger.html` |
 
 ## Tests
@@ -148,7 +164,7 @@ vendor/bin/phpstan
 vendor/bin/live-check
 ```
 
-The app waits for Postgres and web services with Tenma's own functions, which only run inside Tenma's event loop. So `tests/bootstrap.php` hands the PHPUnit run to `tenma tests/tenma.php`, which runs PHPUnit in a task and, on a free port of the same process, a fake of the two web services ([`tests/ApiStub.php`](tests/ApiStub.php)): fast, 300 ms late, or down. The tests never reach the real services.
+The app waits for Postgres and web services with Tenma's own functions, which only run inside Tenma's event loop. So `tests/bootstrap.php` hands the PHPUnit run to `tenma tests/tenma.php`, which runs PHPUnit in a task and, on a free port of the same process, a fake of the two web services ([`tests/ApiStub.php`](tests/ApiStub.php)): fast, 300 ms late, or down. It counts its requests, so the tests can check that the cached product page does not call it and `?live` does. The tests never reach the real services.
 
 - [`StorefrontTest`](tests/StorefrontTest.php), [`OrderingTest`](tests/OrderingTest.php), [`BackofficeTest`](tests/BackofficeTest.php), [`ApiTest`](tests/ApiTest.php) send requests through the app with Waypoint's testing kit and drive live components with `Waypoint\Live\Testing\Tab`, on the database `bakery_test` with fresh demo data for each test.
 - [`SiteTest`](tests/SiteTest.php) starts `tenma --workers 2 index.php` and plays customer, bakery and till over HTTP and the live WebSocket: the order placed in one tab appears on the board, and the order page in two tabs (on both workers) follows each step.
@@ -161,7 +177,7 @@ The app waits for Postgres and web services with Tenma's own functions, which on
 ```text
 app.php, index.php       the app, and serving it under Tenma
 bin/task.php             CLI tasks under tenma: db:reset, i18n:extract, ...
-bin/bench.php            Tenma::all() against one after another
+bin/bench.php            the product page's sources: cached, live with Tenma::all(), live one after another
 database/                migrations and demo data
 lang/de.json             the German texts; English is in the code
 src/Catalog              products
