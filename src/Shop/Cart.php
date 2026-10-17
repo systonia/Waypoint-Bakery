@@ -6,6 +6,7 @@ use Bakery\Catalog\{Product, Products};
 use Tenma\Db\Postgres;
 use Waypoint\Attributes\Inject;
 use Waypoint\Live\{Connection, Scoped};
+use Waypoint\Support\Row;
 
 /**
  * The cart of one browser tab, shared by every component of the tab: the badge in the header, the buttons on
@@ -33,11 +34,10 @@ final class Cart
                 'SELECT c.quantity, ' . Products::COLUMNS . ' FROM cart_lines c JOIN products p ON p.id = c.product_id WHERE c.cart = $1 ORDER BY p.position',
                 [$this->id()],
             );
-            foreach ($rows as $row) {
-                ['quantity' => $quantity] = $row;
-                unset($row['quantity']);
-                $product = new Product(...$row);
-                $this->lines[$product->id] = new CartLine($product, $quantity);
+            foreach ($rows as $values) {
+                $row = new Row($values);
+                $product = Product::of($row);
+                $this->lines[$product->id] = new CartLine($product, $row->int('quantity'));
             }
         }
         return $this->lines;

@@ -4,6 +4,7 @@ namespace Bakery\Backoffice;
 
 use Tenma\Db\Postgres;
 use Waypoint\Attributes\Inject;
+use Waypoint\Support\Row;
 
 /** The sales per day and product, computed in the background, and what the charts read from them. */
 final class SalesReport
@@ -38,25 +39,27 @@ final class SalesReport
             SQL, [$interval]);
     }
 
-    /** @return list<array<string, mixed>> day and revenue in euros, one row per day, also for days without sales */
+    /** @return list<DailyRevenue> one per day, also for days without sales */
     public function revenueByDay(int $days, string $locale): array
     {
-        return $this->db->query(<<<'SQL'
+        $rows = $this->db->query(<<<'SQL'
             SELECT to_char(d, $2) AS day, coalesce(sum(s.revenue_cents), 0) / 100.0 AS revenue
             FROM generate_series(current_date - ($1::int - 1), current_date, interval '1 day') AS d
             LEFT JOIN daily_sales s ON s.day = d::date
             GROUP BY d ORDER BY d
             SQL, [$days, $locale === 'de' ? 'DD.MM.' : 'DD Mon']);
+        return array_map(fn (array $values) => DailyRevenue::of(new Row($values)), $rows);
     }
 
-    /** @return list<array<string, mixed>> product name and quantity sold, best first */
+    /** @return list<ProductSales> best first */
     public function topProducts(int $days, string $locale): array
     {
-        return $this->db->query(<<<'SQL'
+        $rows = $this->db->query(<<<'SQL'
             SELECT p.name ->> $2 AS product, sum(s.quantity) AS quantity
             FROM daily_sales s JOIN products p ON p.id = s.product_id
             WHERE s.day > current_date - $1::int
             GROUP BY p.id ORDER BY quantity DESC, p.position
             SQL, [$days, $locale]);
+        return array_map(fn (array $values) => ProductSales::of(new Row($values)), $rows);
     }
 }

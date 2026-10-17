@@ -56,6 +56,7 @@ final class OrderingTest extends AppTestCase
         $tab->mount('app-checkout')->submit('form', ['name' => 'Mia', 'email' => 'mia@example.test', 'pickupDate' => $this->day()]);
 
         $code = $this->sql("SELECT code FROM orders WHERE email = 'mia@example.test'");
+        $this->assertIsString($code);
         $tab->assertNavigatedTo("/orders/$code/thanks");
         $this->assertSame(34, $this->sql('SELECT stock FROM products WHERE id = 4'));
         $this->assertSame(0, $this->sql('SELECT count(*) FROM cart_lines'));

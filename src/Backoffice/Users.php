@@ -4,6 +4,7 @@ namespace Bakery\Backoffice;
 
 use Tenma\Db\Postgres;
 use Waypoint\Attributes\Inject;
+use Waypoint\Support\Row;
 
 /** The people who work in the bakery. */
 final class Users
@@ -24,10 +25,11 @@ final class Users
      */
     public function verify(string $email, string $password): ?array
     {
-        $user = $this->db->first(
-            "SELECT json_build_object('sub', id, 'name', name, 'role', role) AS claims, password_hash FROM users WHERE lower(email) = lower($1)",
-            [trim($email)],
-        );
-        return password_verify($password, $user['password_hash'] ?? self::NOBODY) ? $user['claims'] ?? null : null;
+        $user = $this->db->first('SELECT id, name, role, password_hash FROM users WHERE lower(email) = lower($1)', [trim($email)]);
+        $row = $user === null ? null : new Row($user);
+        if (!password_verify($password, $row?->string('password_hash') ?? self::NOBODY) || $row === null) {
+            return null;
+        }
+        return ['sub' => $row->int('id'), 'name' => $row->string('name'), 'role' => $row->string('role')];
     }
 }

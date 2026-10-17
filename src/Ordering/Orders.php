@@ -5,11 +5,12 @@ namespace Bakery\Ordering;
 use DomainException;
 use Tenma\Db\Postgres;
 use Waypoint\Attributes\Inject;
+use Waypoint\Support\Row;
 
 /** Orders in Postgres: placing one reserves its stock, cancelling one gives the stock back. */
 final class Orders
 {
-    // The columns under the names of Order's and OrderLine's constructors
+    // The columns under the names of Order's and OrderLine's constructors, as order() reads them
     private const SELECT = <<<'SQL'
         SELECT o.id, o.code, o.customer_name AS "customerName", o.email, o.pickup_date AS "pickupDate", o.locale,
             o.status, o.created_at AS "createdAt", coalesce((
@@ -31,16 +32,16 @@ final class Orders
     public function place(array $quantities, string $name, string $email, string $pickupDate, string $locale): Order
     {
         $id = $this->db->transaction(function (Postgres $tx) use ($quantities, $name, $email, $pickupDate, $locale): int {
-            $id = $tx->first(
+            $id = new Row($tx->first(
                 'INSERT INTO orders (code, customer_name, email, pickup_date, locale) VALUES ($1, $2, $3, $4, $5) RETURNING id',
                 [bin2hex(random_bytes(5)), $name, $email, $pickupDate, $locale],
-            )['id'] ?? throw new DomainException('The order was not stored');
+            ) ?? throw new DomainException('The order was not stored'))->int('id');
             ksort($quantities);   // the same order of row locks in every transaction: no deadlocks between two checkouts
             foreach ($quantities as $product => $quantity) {
                 $reserved = $tx->first(
                     'UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1 RETURNING name ->> $3 AS name, price_cents',
                     [$quantity, $product, $locale],
-                ) ?? throw new OutOfStock($tx->first('SELECT name ->> $2 AS name FROM products WHERE id = $1', [$product, $locale])['name'] ?? "#$product");
+                ) ?? throw new OutOfStock(self::name($tx->first('SELECT name ->> $2 AS name FROM products WHERE id = $1', [$product, $locale])) ?? "#$product");
                 $tx->execute(
                     'INSERT INTO order_lines (order_id, product_id, name, price_cents, quantity) VALUES ($1, $2, $3, $4, $5)',
                     [$id, $product, $reserved['name'], $reserved['price_cents'], $quantity],
@@ -120,13 +121,26 @@ final class Orders
         ) === 1;
     }
 
-    /** @param array<string, mixed> $row */
-    private static function order(array $row): Order
+    /** @param array<string, mixed> $values */
+    private static function order(array $values): Order
     {
-        return new Order(...[
-            ...$row,
-            'status' => OrderStatus::from($row['status']),
-            'lines' => array_map(fn (array $line) => new OrderLine(...$line), $row['lines']),
-        ]);
+        $row = new Row($values);
+        return new Order(
+            id: $row->int('id'),
+            code: $row->string('code'),
+            customerName: $row->string('customerName'),
+            email: $row->string('email'),
+            pickupDate: $row->string('pickupDate'),
+            locale: $row->string('locale'),
+            status: $row->enum('status', OrderStatus::class),
+            createdAt: $row->string('createdAt'),
+            lines: array_map(fn (Row $line) => new OrderLine($line->int('product'), $line->string('name'), $line->int('priceCents'), $line->int('quantity')), $row->rows('lines')),
+        );
+    }
+
+    /** @param array<string, mixed>|null $values */
+    private static function name(?array $values): ?string
+    {
+        return $values === null ? null : new Row($values)->nullableString('name');
     }
 }

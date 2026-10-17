@@ -16,10 +16,10 @@ final class LastKnown
     #[Inject]
     private Weather $weatherService;
 
-    /** @var array<string, array{en: string, de: string}>|null null until the first good answer */
+    /** @var array<string, Holiday>|null Y-m-d => the holiday, null until the first good answer */
     public private(set) ?array $holidays = null;
 
-    /** @var array<string, array{code: int, max: float, rain: int}>|null null until the first good answer */
+    /** @var array<string, WeatherDay>|null Y-m-d => the forecast, null until the first good answer */
     public private(set) ?array $weather = null;
 
     public function refreshHolidays(): void

@@ -35,7 +35,7 @@ $sky = fn (int $code): string => match (true) {
                 <li class="flex items-center justify-between px-4 py-2">
                     <span class="font-medium"><?= Format::day($day, $locale) ?></span>
                     <?php if (isset($model->weather[$day])): $weather = $model->weather[$day] ?>
-                        <span class="text-sm text-stone-600"><?= $sky($weather['code']) ?>, <?= round($weather['max']) ?> °C, <?= $this->t('{chance}% rain', ['chance' => $weather['rain']]) ?></span>
+                        <span class="text-sm text-stone-600"><?= $sky($weather->code) ?>, <?= round($weather->max) ?> °C, <?= $this->t('{chance}% rain', ['chance' => $weather->rain]) ?></span>
                     <?php endif ?>
                 </li>
             <?php endforeach ?>
@@ -47,7 +47,7 @@ $sky = fn (int $code): string => match (true) {
             <p class="mt-2 text-sm text-stone-500"><?= $this->t('We could not check the public holidays just now; on a holiday the shop is closed.') ?></p>
         <?php endif ?>
         <?php foreach ($model->closed as $date => $holiday): ?>
-            <p class="mt-2 text-sm text-stone-600"><?= $this->t('Closed on {day}: {holiday}', ['day' => Format::day($date, $locale), 'holiday' => $holiday[$locale] ?? $holiday['en']]) ?></p>
+            <p class="mt-2 text-sm text-stone-600"><?= $this->t('Closed on {day}: {holiday}', ['day' => Format::day($date, $locale), 'holiday' => $holiday->name($locale)]) ?></p>
         <?php endforeach ?>
     </div>
 </div>

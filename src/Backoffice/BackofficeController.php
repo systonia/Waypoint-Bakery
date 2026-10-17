@@ -46,10 +46,12 @@ final class BackofficeController
     public function sales(): View
     {
         $locale = $this->translator->locale();
-        ['revenue' => $revenue, 'products' => $products, 'orders' => $orders] = \Tenma::all(
-            revenue: fn () => $this->sales->revenueByDay(28, $locale),
-            products: fn () => $this->sales->topProducts(28, $locale),
-            orders: fn () => $this->orders->recent(7),
+        // The three queries run at once; each closure fills its variable
+        $revenue = $products = $orders = [];
+        \Tenma::all(
+            function () use (&$revenue, $locale): void { $revenue = $this->sales->revenueByDay(28, $locale); },
+            function () use (&$products, $locale): void { $products = $this->sales->topProducts(28, $locale); },
+            function () use (&$orders): void { $orders = $this->orders->recent(7); },
         );
         return new View('Backoffice/Sales', new SalesPage(
             revenue: Chart::fromRows($revenue, x: 'day', y: 'revenue')
@@ -76,16 +78,24 @@ final class BackofficeController
     /** @param list<Order> $orders */
     private function sheet(string $file, array $orders): Sheet
     {
+        // The cells as closures in variables: passed inline, PHPStan would take their parameter from column()'s
+        // Closure(never) and lose the Order
+        $placed = fn (Order $o) => new DateTimeImmutable($o->createdAt);
+        $pickup = fn (Order $o) => new DateTimeImmutable($o->pickupDate);
+        $customer = fn (Order $o) => $o->customerName;
+        $status = fn (Order $o) => $o->status->label($this->translator);
+        $items = fn (Order $o) => implode(', ', array_map(fn (OrderLine $l) => "$l->quantity × $l->name", $o->lines));
+        $total = fn (Order $o) => $o->totalCents() / 100;
         return Sheet::file($file)
             ->title($this->translator->t('Orders'))
             ->column('code', $this->translator->t('Order'))
-            ->column('created', $this->translator->t('Placed'), fn (Order $o) => new DateTimeImmutable($o->createdAt))
-            ->column('pickup', $this->translator->t('Pickup'), fn (Order $o) => new DateTimeImmutable($o->pickupDate))
-            ->column('customer', $this->translator->t('Customer'), fn (Order $o) => $o->customerName)
+            ->column('created', $this->translator->t('Placed'), $placed)
+            ->column('pickup', $this->translator->t('Pickup'), $pickup)
+            ->column('customer', $this->translator->t('Customer'), $customer)
             ->column('email', $this->translator->t('Email'))
-            ->column('status', $this->translator->t('Status'), fn (Order $o) => $o->status->label($this->translator))
-            ->column('items', $this->translator->t('Items'), fn (Order $o) => implode(', ', array_map(fn (OrderLine $l) => "$l->quantity × $l->name", $o->lines)))
-            ->column('total', $this->translator->t('Total (€)'), fn (Order $o) => $o->totalCents() / 100)
+            ->column('status', $this->translator->t('Status'), $status)
+            ->column('items', $this->translator->t('Items'), $items)
+            ->column('total', $this->translator->t('Total (€)'), $total)
             ->rows($orders);
     }
 }

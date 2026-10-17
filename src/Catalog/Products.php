@@ -4,11 +4,12 @@ namespace Bakery\Catalog;
 
 use Tenma\Db\Postgres;
 use Waypoint\Attributes\Inject;
+use Waypoint\Support\Row;
 
 /** The range from Postgres. Every call waits only for its own query: other requests of the worker go on meanwhile. */
 final class Products
 {
-    /** The columns under the names of Product's constructor, so that a row is `new Product(...$row)`. */
+    /** The columns Product::of() reads. */
     public const COLUMNS = 'p.id, p.slug, p.name, p.description, p.category, p.price_cents AS "priceCents", p.stock, p.picture';
 
     #[Inject]
@@ -17,19 +18,19 @@ final class Products
     /** @return list<Product> */
     public function all(): array
     {
-        return array_map(fn (array $row) => new Product(...$row), $this->db->query('SELECT ' . self::COLUMNS . ' FROM products p ORDER BY p.position, p.id'));
+        return array_map(fn (array $row) => Product::of(new Row($row)), $this->db->query('SELECT ' . self::COLUMNS . ' FROM products p ORDER BY p.position, p.id'));
     }
 
     public function bySlug(string $slug): ?Product
     {
         $row = $this->db->first('SELECT ' . self::COLUMNS . ' FROM products p WHERE p.slug = $1', [$slug]);
-        return $row === null ? null : new Product(...$row);
+        return $row === null ? null : Product::of(new Row($row));
     }
 
     public function byId(int $id): ?Product
     {
         $row = $this->db->first('SELECT ' . self::COLUMNS . ' FROM products p WHERE p.id = $1', [$id]);
-        return $row === null ? null : new Product(...$row);
+        return $row === null ? null : Product::of(new Row($row));
     }
 
     public function setStock(int $id, int $stock): void

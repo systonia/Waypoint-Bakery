@@ -10,4 +10,4 @@ fclose($probe);
 putenv("API_STUB=http://127.0.0.1:$port");
 Tenma::serve($port, new Bakery\Tests\ApiStub());
 
-Tenma::async(fn () => exit((new PHPUnit\TextUI\Application())->run($_SERVER['argv'])));
+Tenma::async(fn () => exit((new PHPUnit\TextUI\Application())->run(Waypoint\Support\Row::of($_SERVER)->list('argv', 'string'))));

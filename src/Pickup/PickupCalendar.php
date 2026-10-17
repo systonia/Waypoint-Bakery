@@ -24,8 +24,8 @@ final class PickupCalendar
     }
 
     /**
-     * @param array<array<string, mixed>> $hours ISO weekday => anything, from OpeningHours::week()
-     * @param array<string, mixed> $holidays Y-m-d => anything, from Holidays::upcoming()
+     * @param array<int, OpeningDay> $hours ISO weekday => its hours, from OpeningHours::week()
+     * @param array<string, Holiday> $holidays Y-m-d => the holiday, from Holidays::upcoming()
      * @return list<string> Y-m-d, at most $count
      */
     public static function days(DateTimeImmutable $today, array $hours, array $holidays, int $count = self::DAYS_AHEAD): array

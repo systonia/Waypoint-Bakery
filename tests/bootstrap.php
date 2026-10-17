@@ -5,7 +5,7 @@
 
 if (!class_exists(Tenma::class, false)) {
     $tenma = getenv('TENMA_BIN') ?: 'tenma';
-    $arguments = array_map(escapeshellarg(...), array_slice($_SERVER['argv'] ?? [], 1));
+    $arguments = array_map(escapeshellarg(...), array_slice(Waypoint\Support\Row::of($_SERVER)->list('argv', 'string'), 1));
     passthru(escapeshellarg($tenma) . ' ' . escapeshellarg(__DIR__ . '/tenma.php') . ' ' . implode(' ', $arguments), $status);
     exit($status);
 }

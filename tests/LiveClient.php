@@ -3,6 +3,7 @@
 namespace Bakery\Tests;
 
 use RuntimeException;
+use Waypoint\Support\Row;
 
 /** A browser tab's WebSocket to /_live, for tests against a running server: mount, call, and what comes back. */
 final class LiveClient
@@ -104,9 +105,9 @@ final class LiveClient
         }
         $length = ord($head[1]) & 0x7f;
         if ($length === 126) {
-            $length = (int) (unpack('n', (string) fread($this->socket, 2))[1] ?? 0);
+            $length = Row::of(unpack('n', (string) fread($this->socket, 2)))->int('1');
         } elseif ($length === 127) {
-            $length = (int) (unpack('J', (string) fread($this->socket, 8))[1] ?? 0);
+            $length = Row::of(unpack('J', (string) fread($this->socket, 8)))->int('1');
         }
         $data = '';
         while (($missing = $length - strlen($data)) > 0 && !feof($this->socket)) {

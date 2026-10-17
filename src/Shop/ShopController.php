@@ -57,11 +57,14 @@ final class ShopController
     {
         $started = hrtime(true);
         $live = $req->query('live') !== null;
-        ['product' => $product, 'hours' => $hours, 'holidays' => $holidays, 'weather' => $weather] = \Tenma::all(
-            product: fn () => $this->products->bySlug($slug),
-            hours: fn () => $this->hours->week(),
-            holidays: fn () => $live ? $this->holidays->upcoming() : $this->lastKnown->holidays,
-            weather: fn () => $live ? $this->weather->week() : $this->lastKnown->weather,
+        // The sources are asked at once; each closure fills its variable
+        $product = $holidays = $weather = null;
+        $hours = [];
+        \Tenma::all(
+            function () use (&$product, $slug): void { $product = $this->products->bySlug($slug); },
+            function () use (&$hours): void { $hours = $this->hours->week(); },
+            function () use (&$holidays, $live): void { $holidays = $live ? $this->holidays->upcoming() : $this->lastKnown->holidays; },
+            function () use (&$weather, $live): void { $weather = $live ? $this->weather->week() : $this->lastKnown->weather; },
         );
         $res->withHeader('Server-Timing', sprintf('%s;dur=%.1f', $live ? 'live' : 'cached', (hrtime(true) - $started) / 1e6));
         if ($product === null) {
