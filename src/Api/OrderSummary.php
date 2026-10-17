@@ -3,6 +3,7 @@
 namespace Bakery\Api;
 
 use Bakery\Ordering\{Order, OrderLine, OrderStatus};
+use Waypoint\Attributes\ListOf;
 
 /** An order as the API shows it: without the customer's email and the internal id. */
 final readonly class OrderSummary
@@ -14,6 +15,7 @@ final readonly class OrderSummary
         public string $pickupDate,
         public OrderStatus $status,
         public int $totalCents,
+        #[ListOf(OrderLine::class)]
         public array $lines,
     ) {
     }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "09b5ee39b051b05fdbde1ba9087efb63",
+    "content-hash": "7de05f03ec53e5d7a81525f1a6821aaf",
     "packages": [
         {
             "name": "psr/container",
@@ -275,16 +275,16 @@
         },
         {
             "name": "systonia/waypoint",
-            "version": "v0.7.3",
+            "version": "v0.7.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/systonia/Waypoint.git",
-                "reference": "f0b270a2db617785f9c007be79d38007463fa938"
+                "reference": "534eb66a4937e8d494e2cae58f3a27716e003004"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/systonia/Waypoint/zipball/f0b270a2db617785f9c007be79d38007463fa938",
-                "reference": "f0b270a2db617785f9c007be79d38007463fa938",
+                "url": "https://api.github.com/repos/systonia/Waypoint/zipball/534eb66a4937e8d494e2cae58f3a27716e003004",
+                "reference": "534eb66a4937e8d494e2cae58f3a27716e003004",
                 "shasum": ""
             },
             "require": {
@@ -346,9 +346,9 @@
             ],
             "support": {
                 "issues": "https://github.com/systonia/Waypoint/issues",
-                "source": "https://github.com/systonia/Waypoint/tree/v0.7.3"
+                "source": "https://github.com/systonia/Waypoint/tree/v0.7.4"
             },
-            "time": "2026-10-17T01:49:26+00:00"
+            "time": "2026-10-17T04:44:51+00:00"
         },
         {
             "name": "systonia/waypoint-charts",

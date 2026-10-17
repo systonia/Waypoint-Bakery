@@ -3,9 +3,9 @@
 namespace Bakery\Api;
 
 use Bakery\Backoffice\Users;
-use Bakery\Catalog\Products;
+use Bakery\Catalog\{Product, Products};
 use Bakery\Ordering\{Order, Orders};
-use Waypoint\Attributes\{Authenticated, Body, Controller, Get, Inject, Patch, Post, SkipCsrf, Summary, Tags, Throws, Version};
+use Waypoint\Attributes\{Authenticated, Body, Controller, Get, Inject, Patch, Post, Returns, SkipCsrf, Summary, Tags, Throws, Version};
 use Waypoint\Exceptions\{NotFoundException, UnauthorizedException, ValidationException};
 use Waypoint\JWT;
 use Waypoint\Live\Broadcast;
@@ -45,13 +45,17 @@ final class ApiController
         return new BearerToken(JWT::encode($user));
     }
 
-    /** @return list<ProductSummary> */
+    /** @return list<Product> */
     #[Get('/products')]
     #[Tags(['Products'])]
     #[Summary('The range with prices in cents and what is left')]
+    #[Returns(
+        type: Product::class,
+        list: true
+    )]
     public function products(): array
     {
-        return array_map(ProductSummary::of(...), $this->products->all());
+        return $this->products->all();
     }
 
     /** @return list<OrderSummary> */
@@ -59,6 +63,10 @@ final class ApiController
     #[Authenticated]
     #[Tags(['Orders'])]
     #[Summary('Every order that is not picked up or cancelled')]
+    #[Returns(
+        type: OrderSummary::class,
+        list: true
+    )]
     public function openOrders(): array
     {
         return array_map(OrderSummary::of(...), $this->orders->open());
