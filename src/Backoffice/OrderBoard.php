@@ -37,10 +37,10 @@ final class OrderBoard
     /** @return list<array{OrderStatus, list<Order>}> each step with its orders */
     private function columns(): array
     {
-        $open = $this->orders->open();
-        return array_map(
-            fn (OrderStatus $status) => [$status, array_values(array_filter($open, fn (Order $order) => $order->status === $status))],
-            [OrderStatus::Pending, OrderStatus::Received, OrderStatus::Baking, OrderStatus::Ready],
-        );
+        $byStatus = [];
+        foreach ($this->orders->open() as $order) {
+            $byStatus[$order->status->value][] = $order;
+        }
+        return array_map(fn (OrderStatus $status) => [$status, $byStatus[$status->value] ?? []], OrderStatus::BOARD);
     }
 }

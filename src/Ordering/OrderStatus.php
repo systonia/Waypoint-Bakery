@@ -14,6 +14,9 @@ enum OrderStatus: string
     case PickedUp = 'picked_up';
     case Cancelled = 'cancelled';
 
+    /** The steps the order board shows, in order. */
+    public const array BOARD = [self::Pending, self::Received, self::Baking, self::Ready];
+
     /** The step the bakery takes next, null for an order that is done or still waits for its customer. */
     public function next(): ?self
     {
