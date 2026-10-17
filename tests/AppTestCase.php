@@ -5,6 +5,7 @@ namespace Bakery\Tests;
 use Bakery\Database\DatabaseTasks;
 use Tenma\Db\Postgres;
 use Waypoint\Environment;
+use Waypoint\Live\Broadcast;
 use Waypoint\Testing\TestCase;
 
 /**
@@ -39,6 +40,19 @@ abstract class AppTestCase extends TestCase
     {
         $row = $this->db()->first($sql, $params);
         return $row === null ? null : reset($row);
+    }
+
+    /** What the app does after an order changed. The broadcast travels through Tenma::publish(), so it takes a moment. */
+    protected function broadcast(): void
+    {
+        $this->app()->get(Broadcast::class)->changed();
+        $this->settle();
+    }
+
+    /** Lets broadcasts that are on their way reach the tabs. */
+    protected function settle(): void
+    {
+        \Tenma::sleep(0.2);
     }
 
     protected function db(): Postgres

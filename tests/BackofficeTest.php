@@ -6,7 +6,6 @@ use Bakery\Backoffice\SalesReport;
 use Bakery\Ordering\Orders;
 use Waypoint\Exceptions\UnauthorizedException;
 use Waypoint\Http\Request;
-use Waypoint\Live\Broadcast;
 use Waypoint\Live\Testing\{Mounted, Tab};
 
 /** Sign-in, the live order board, stock, sales and exports. */
@@ -86,17 +85,15 @@ final class BackofficeTest extends AppTestCase
 
         $orders = $this->app()->get(Orders::class);
         $order = $orders->place([4 => 3], 'Lena', 'lena@example.test', date('Y-m-d', strtotime('tomorrow')), 'en');
-        $this->app()->get(Broadcast::class)->changed();   // what the checkout does
-        \Tenma::sleep(0.05);
+        $this->broadcast();   // what the checkout does
         $morning->assertSee('Lena')->assertSee('3 × Butter croissant')->assertSee('Not confirmed yet');
         $office->assertSee('Lena');
 
         // A confirmed order can be moved on from either board, and both follow
         $orders->confirm($order->id);
-        $this->app()->get(Broadcast::class)->changed();
-        \Tenma::sleep(0.05);
+        $this->broadcast();
         $morning->click('li[data-key="' . $order->code . '"] button');
-        \Tenma::sleep(0.05);
+        $this->settle();
         $this->assertSame('baking', $this->sql('SELECT status FROM orders WHERE id = $1', [$order->id]));
         $this->assertMatchesRegularExpression('/data-key="baking".*data-key="' . $order->code . '"/s', $office->html());
     }

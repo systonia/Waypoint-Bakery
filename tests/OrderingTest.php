@@ -6,7 +6,6 @@ use Bakery\Ordering\{OrderStatus, Orders, OutOfStock};
 use Bakery\Pickup\PickupCalendar;
 use Waypoint\Http\Request;
 use Waypoint\I18n\Translator;
-use Waypoint\Live\Broadcast;
 use Waypoint\Live\Testing\Tab;
 
 /** The customer's way through the shop: the cart across pages, the checkout, the order page that follows the bakery. */
@@ -88,8 +87,7 @@ final class OrderingTest extends AppTestCase
 
         // The bakery moves it on somewhere else: here, the API
         $orders->advance($order->id, OrderStatus::Received);
-        $this->app()->get(Broadcast::class)->changed();
-        \Tenma::sleep(0.05);
+        $this->broadcast();
         $this->assertMatchesRegularExpression('/aria-current="step"\s*>\s*In the oven/', $tracker->html());
     }
 
