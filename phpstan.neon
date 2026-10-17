@@ -6,5 +6,5 @@ parameters:
         - src
         - tests
     excludePaths:
-        # live templates: vendor/bin/live-check checks them
+        # live templates: vendor/bin/waypoint-check checks them, with the views
         - src/Components/*.Template.php

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "38f907b5914a8485060a0fc4fd9928d8",
+    "content-hash": "7ed3dafbf26a2d29334459cdef479407",
     "packages": [
         {
             "name": "psr/container",
@@ -275,16 +275,16 @@
         },
         {
             "name": "systonia/waypoint",
-            "version": "v0.7.6",
+            "version": "v0.7.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/systonia/Waypoint.git",
-                "reference": "3e1ad318e5168b5a716d57cd89a9581f1d9db4fe"
+                "reference": "8c3140485f663d3d3bbd21191f959b5888bb2465"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/systonia/Waypoint/zipball/3e1ad318e5168b5a716d57cd89a9581f1d9db4fe",
-                "reference": "3e1ad318e5168b5a716d57cd89a9581f1d9db4fe",
+                "url": "https://api.github.com/repos/systonia/Waypoint/zipball/8c3140485f663d3d3bbd21191f959b5888bb2465",
+                "reference": "8c3140485f663d3d3bbd21191f959b5888bb2465",
                 "shasum": ""
             },
             "require": {
@@ -301,15 +301,21 @@
                 "phpstan/phpstan": "^2.2",
                 "phpunit/phpunit": "^13.3",
                 "tenma/psr": "^0.1.1",
-                "tenma/stubs": "^0.1.1"
+                "tenma/stubs": "^0.1.16"
             },
             "suggest": {
                 "monolog/monolog": "Powerful logging with handlers, channels, and JSON output.",
                 "phpunit/phpunit": "Required by the Waypoint\\Testing kit for app and plugin tests.",
                 "tenma/psr": "Response::upgrade() through the PSR-15 handler under Tenma"
             },
+            "bin": [
+                "bin/waypoint-check"
+            ],
             "type": "library",
             "extra": {
+                "tenma": {
+                    "lsp": "Waypoint\\View\\Editor"
+                },
                 "phpstan": {
                     "includes": [
                         "extension.neon"
@@ -317,6 +323,9 @@
                 }
             },
             "autoload": {
+                "files": [
+                    "src/Waypoint/classes.php"
+                ],
                 "psr-4": {
                     "Waypoint\\": "src/Waypoint/"
                 }
@@ -346,9 +355,9 @@
             ],
             "support": {
                 "issues": "https://github.com/systonia/Waypoint/issues",
-                "source": "https://github.com/systonia/Waypoint/tree/v0.7.6"
+                "source": "https://github.com/systonia/Waypoint/tree/v0.7.7"
             },
-            "time": "2026-10-17T11:13:02+00:00"
+            "time": "2026-10-17T15:59:47+00:00"
         },
         {
             "name": "systonia/waypoint-charts",
@@ -512,21 +521,21 @@
         },
         {
             "name": "systonia/waypoint-live",
-            "version": "v0.2.4",
+            "version": "v0.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/systonia/Waypoint-Live.git",
-                "reference": "01bdc6307525fbf7ee1d29f47894d8717beae84a"
+                "reference": "4b05fcc4b8e20915f2d7d92e4e3bdb38b47a7429"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/systonia/Waypoint-Live/zipball/01bdc6307525fbf7ee1d29f47894d8717beae84a",
-                "reference": "01bdc6307525fbf7ee1d29f47894d8717beae84a",
+                "url": "https://api.github.com/repos/systonia/Waypoint-Live/zipball/4b05fcc4b8e20915f2d7d92e4e3bdb38b47a7429",
+                "reference": "4b05fcc4b8e20915f2d7d92e4e3bdb38b47a7429",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.5",
-                "systonia/waypoint": "^0.7.2"
+                "systonia/waypoint": "^0.7.7"
             },
             "require-dev": {
                 "phpstan/phpstan": "^2.2",
@@ -545,6 +554,9 @@
                     "includes": [
                         "extension.neon"
                     ]
+                },
+                "waypoint": {
+                    "checks": "Waypoint\\Live\\TemplateChecks"
                 }
             },
             "autoload": {
@@ -563,9 +575,9 @@
             "description": "Live components for Waypoint under Tenma: server-side PHP components, events and renders over one WebSocket, services called directly.",
             "support": {
                 "issues": "https://github.com/systonia/Waypoint-Live/issues",
-                "source": "https://github.com/systonia/Waypoint-Live/tree/v0.2.4"
+                "source": "https://github.com/systonia/Waypoint-Live/tree/v0.2.5"
             },
-            "time": "2026-10-17T13:17:30+00:00"
+            "time": "2026-10-17T16:00:40+00:00"
         }
     ],
     "packages-dev": [

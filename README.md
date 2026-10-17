@@ -39,13 +39,13 @@ With several workers, the way the shop runs in production:
 tenma --workers 2 index.php
 ```
 
-Tests, static analysis and the template checks:
+Tests, static analysis and the checks of views and templates:
 
 ```bash
 createdb bakery_test
 vendor/bin/phpunit
 vendor/bin/phpstan
-vendor/bin/live-check
+vendor/bin/waypoint-check
 ```
 
 `tests/Support/bootstrap.php` hands the PHPUnit run to `tenma tests/Support/tenma.php`, which serves a fake of the two web services ([`tests/Support/ApiStub.php`](tests/Support/ApiStub.php)) on a free port of the same process: fast, 300 ms late, down, or answering no JSON. `SiteTest` starts `tenma --workers 2 index.php`; `SITE_LOG=/tmp/site.log` keeps its log. The other tests sit in the folder of the class they test, under the same name with `Test`.
@@ -85,7 +85,7 @@ Each part of the shop, the files it lives in, and the page of the documentation 
 
 | What | Where | Docs |
 |---|---|---|
-| Pages as controllers and views with typed models; `<?= ?>` escapes | [`src/Controllers/ShopController.php`](src/Controllers/ShopController.php), [`views/Shop/`](views/Shop), [`views/_Layout.php`](views/_Layout.php) | Waypoint [Routing](https://github.com/systonia/Waypoint/blob/main/docs/guides/routing.md), [Views](https://github.com/systonia/Waypoint/blob/main/docs/guides/views.md) |
+| Pages as controllers and views with typed models (`@model`); `{{ }}` escapes | [`src/Controllers/ShopController.php`](src/Controllers/ShopController.php), [`views/Shop/`](views/Shop), [`views/_Layout.php`](views/_Layout.php) | Waypoint [Routing](https://github.com/systonia/Waypoint/blob/main/docs/guides/routing.md), [Views](https://github.com/systonia/Waypoint/blob/main/docs/guides/views.md) |
 | Rows and web service answers read with `Row`'s typed getters, no casts, PHPStan level 10 | [`src/Models/Product.php`](src/Models/Product.php), [`src/Repositories/Orders.php`](src/Repositories/Orders.php), [`src/Services/Weather.php`](src/Services/Weather.php) | Tenma [Databases](https://github.com/systonia/Tenma/blob/main/docs/guides/database.md), Waypoint [Types and PHPStan](https://github.com/systonia/Waypoint/blob/main/docs/guides/types.md) |
 | The product page from memory, or `?live` with four sources at once | `ShopController::product()`, [`src/Services/LastKnown.php`](src/Services/LastKnown.php) | Tenma [Several things at once](https://github.com/systonia/Tenma/blob/main/docs/guides/async.md#several-things-at-once) |
 | Web services with a timeout and a fallback | [`src/Services/Holidays.php`](src/Services/Holidays.php), [`src/Services/Weather.php`](src/Services/Weather.php) | Tenma [Outgoing HTTP](https://github.com/systonia/Tenma/blob/main/docs/guides/fetch.md#errors) |
