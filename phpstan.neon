@@ -1,18 +1,10 @@
-includes:
-    - vendor/tenma/stubs/extension.neon
-    - vendor/systonia/waypoint-live/extension.neon
-
 parameters:
     level: 8
     paths:
         - app.php
         - index.php
-        - bin
         - src
         - tests
     excludePaths:
         # live templates: vendor/bin/live-check checks them
         - src/**/*.Template.php
-    ignoreErrors:
-        # #[Inject] properties are written by Waypoint's PropertyInjector
-        - identifier: property.onlyRead

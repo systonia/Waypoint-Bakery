@@ -54,7 +54,9 @@ jobs:
         run: vendor/bin/live-check
 
       - name: Translations are complete
+        env:
+          APP_ENV: test
         run: |
-          tenma bin/task.php i18n:extract
+          tenma index.php i18n:extract
           git diff --exit-code lang/
-          tenma bin/task.php i18n:check
+          tenma index.php i18n:check
