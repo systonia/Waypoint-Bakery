@@ -19,13 +19,13 @@ final class ApiTest extends AppTestCase
     {
         $this->get('/v1/orders')->assertStatus(401);
         $this->json('POST', '/v1/tokens', ['email' => 'ben@sonnenkorn.test', 'password' => 'wrong'])->assertStatus(401);
-        $token = (string) $this->json('POST', '/v1/tokens', ['email' => 'ben@sonnenkorn.test', 'password' => 'pretzel'])->assertOk()->json('token');
+        $token = $this->json('POST', '/v1/tokens', ['email' => 'ben@sonnenkorn.test', 'password' => 'pretzel'])->assertOk()->json('token');
         $this->get('/v1/orders', ['Authorization' => "Bearer $token"])->assertOk()->assertJson([]);
     }
 
     public function testMovingAnOrderOnOneStepAtATime(): void
     {
-        $orders = $this->service(Orders::class);
+        $orders = $this->app()->get(Orders::class);
         $order = $orders->place([1 => 1], 'Paul', 'paul@example.test', new DateTimeImmutable('tomorrow')->format('Y-m-d'), 'en');
         $orders->confirm($order->id);
 
@@ -48,7 +48,8 @@ final class ApiTest extends AppTestCase
         $this->assertSame('Sonnenkorn bakery API', $spec->json('info.title'));
         $this->assertSame('Move an order to its next step', $spec->json('paths./v1/orders/{code}.patch.summary'));
         $this->assertSame('#/components/schemas/StatusChange', $spec->json('paths./v1/orders/{code}.patch.requestBody.content.application/json.schema.$ref'));
-        // The pages are no API
-        $this->assertNull($spec->json('paths./cart'));
+        $this->assertSame('#/components/schemas/OrderSummary', $spec->json('paths./v1/orders/{code}.patch.responses.200.content.application/json.schema.$ref'));
+        $this->assertSame(['pending', 'received', 'baking', 'ready', 'picked_up', 'cancelled', null], $spec->json('components.schemas.StatusChange.properties.status.enum'));
+        $this->assertSame(['/v1/orders', '/v1/orders/{code}', '/v1/products', '/v1/tokens'], array_keys($spec->json('paths')));
     }
 }

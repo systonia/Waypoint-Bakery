@@ -2,6 +2,7 @@
 
 namespace Bakery\Pickup;
 
+use JsonException;
 use RuntimeException;
 use Waypoint\Attributes\Inject;
 use Waypoint\Environment;
@@ -24,18 +25,18 @@ final class Holidays
      */
     public function upcoming(): ?array
     {
-        $url = rtrim((string) $this->env->get('HOLIDAYS_URL', 'https://date.nager.at'), '/') . '/api/v3/NextPublicHolidays/' . rawurlencode((string) $this->env->get('HOLIDAY_COUNTRY', 'DE'));
+        $url = rtrim($this->env->string('HOLIDAYS_URL', 'https://date.nager.at'), '/') . '/api/v3/NextPublicHolidays/' . rawurlencode($this->env->string('HOLIDAY_COUNTRY', 'DE'));
         try {
-            $response = \Tenma::fetch($url, timeout: (float) $this->env->get('API_TIMEOUT', 2.5));
+            $response = \Tenma::fetch($url, timeout: $this->env->float('API_TIMEOUT', 2.5));
             $list = $response->status === 200 ? $response->json() : null;
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException|JsonException $e) {
             $list = null;
             $this->logger->warning('holidays: ' . $e->getMessage());
         }
         if (!is_array($list)) {
             return null;
         }
-        $region = (string) $this->env->get('HOLIDAY_REGION', '');
+        $region = $this->env->string('HOLIDAY_REGION', '');
         $holidays = [];
         foreach ($list as $holiday) {
             if (!is_array($holiday) || !is_string($holiday['date'] ?? null)) {

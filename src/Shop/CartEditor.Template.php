@@ -11,10 +11,10 @@
                 <span class="w-6 text-center tabular-nums">{{ $line->quantity }}</span>
                 <button data-on-click="more($line->product)" class="size-8 rounded-full ring-1 ring-stone-300" aria-label="{{ $this->i18n->t('One more') }}">+</button>
             </span>
-            <span class="w-20 text-right tabular-nums">{{ $this->price($line->totalCents()) }}</span>
+            <span class="w-20 text-right tabular-nums">{{ Format::price($line->totalCents(), $this->i18n->locale()) }}</span>
             <button data-on-click="remove($line->product)" class="text-sm text-stone-500 underline">{{ $this->i18n->t('Remove') }}</button>
         </li>
     @endforeach
     </ul>
-    <p class="mt-4 text-right text-lg font-semibold">{{ $this->i18n->t('Total') }}: <span class="tabular-nums">{{ $this->price($this->cart->total()) }}</span></p>
+    <p class="mt-4 text-right text-lg font-semibold">{{ $this->i18n->t('Total') }}: <span class="tabular-nums">{{ Format::price($this->cart->total(), $this->i18n->locale()) }}</span></p>
 @endif

@@ -2,7 +2,7 @@
 
 namespace Bakery\Ordering;
 
-use Bakery\Language;
+use Waypoint\I18n\Translator;
 
 /** pending (reserved, waiting for the customer) → received → baking → ready → picked up; pending → cancelled */
 enum OrderStatus: string
@@ -25,21 +25,10 @@ enum OrderStatus: string
         };
     }
 
-    /** Reserved, waiting for the customer to confirm it. */
-    public function isPending(): bool
-    {
-        return $this === self::Pending;
-    }
-
-    public function isOpen(): bool
-    {
-        return $this !== self::PickedUp && $this !== self::Cancelled;
-    }
-
-    public function label(Language $i18n): string
+    public function label(Translator $i18n): string
     {
         return match ($this) {
-            self::Pending => $i18n->t('Waiting for your confirmation'),
+            self::Pending => $i18n->t('Not confirmed yet'),
             self::Received => $i18n->t('Received'),
             self::Baking => $i18n->t('In the oven'),
             self::Ready => $i18n->t('Ready for pickup'),

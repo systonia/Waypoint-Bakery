@@ -2,14 +2,14 @@
 
 namespace Bakery\Tests;
 
-use Bakery\Pickup\{OpeningHours, PickupCalendar};
-use DateTimeImmutable;
+use Bakery\Pickup\PickupCalendar;
 use Waypoint\JWT;
 
 /**
  * The app as it runs: `tenma --workers 2 index.php` on the test database, driven like browsers (HTTP and the live
  * WebSocket) and like the till (the API). Tenma hands new connections to the workers in turn, so the tabs below
- * sit on both workers, and an order change from one worker has to reach the other through Tenma::publish().
+ * sit on both workers, and an order change from one worker has to reach the other: Broadcast::changed() goes out
+ * through Tenma::publish().
  */
 final class SiteTest extends AppTestCase
 {
@@ -67,9 +67,9 @@ final class SiteTest extends AppTestCase
 
         $this->http('GET', '/cart');
         $checkout = new LiveClient($this->port, $this->cookies);
-        $days = PickupCalendar::days(new DateTimeImmutable('today'), $this->service(OpeningHours::class)->week(), []);
-        $checkout->mount('app-checkout', ['days' => $days]);
-        $checkout->call('place', [['name' => 'Emma', 'email' => 'emma@example.test', 'pickupDate' => $days[0]]]);
+        $checkout->mount('app-checkout');
+        $day = $this->app()->get(PickupCalendar::class)->upcoming()[0];
+        $checkout->call('place', [['name' => 'Emma', 'email' => 'emma@example.test', 'pickupDate' => $day]]);
         $this->assertCount(1, $checkout->navigations);
         $this->assertMatchesRegularExpression('#^/orders/[0-9a-f]{10}/thanks$#', $checkout->navigations[0]);
         $code = explode('/', $checkout->navigations[0])[2];

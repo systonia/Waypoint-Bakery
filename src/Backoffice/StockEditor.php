@@ -3,42 +3,29 @@
 namespace Bakery\Backoffice;
 
 use Bakery\Catalog\{Product, Products};
-use Bakery\Language;
-use Waypoint\Attributes\Inject;
-use Waypoint\Exceptions\ForbiddenException;
-use Waypoint\Live\{Component, Connection};
+use Waypoint\Attributes\{Authenticated, Inject};
+use Waypoint\I18n\Translator;
+use Waypoint\Live\Component;
 
 /** What is left of each product. A changed number is saved as soon as the field loses the focus. */
 #[Component]
+#[Authenticated]
 final class StockEditor
 {
     #[Inject]
     private Products $products;
 
     #[Inject]
-    private Connection $connection;
-
-    #[Inject]
-    private Language $i18n;
-
-    /** @var list<Product>|null */
-    private ?array $list = null;
+    private Translator $i18n;
 
     private ?string $saved = null;
 
-    public function set(Product $product, string $stock): void
+    /** An emptied field changes nothing. */
+    public function set(Product $product, ?int $stock): void
     {
-        if (!(User::fromJwt($this->connection->request->jwt)?->isStaff() ?? false)) {
-            throw new ForbiddenException('Only for the people in the bakery');
+        if ($stock !== null) {
+            $this->products->setStock($product->id, $stock);
+            $this->saved = $this->i18n->t('Saved: {product}', ['product' => $product->name($this->i18n->locale())]);
         }
-        $this->products->setStock($product->id, (int) $stock);
-        $this->list = null;
-        $this->saved = $this->i18n->t('Saved: {product}', ['product' => $product->name($this->i18n->locale())]);
-    }
-
-    /** @return list<Product> */
-    private function list(): array
-    {
-        return $this->list ??= $this->products->all();
     }
 }

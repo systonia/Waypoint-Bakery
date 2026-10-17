@@ -1,10 +1,6 @@
 <?php
-/**
- * The back office's frame: its navigation, the signed-in person, the flash messages.
- *
- * @var Bakery\Backoffice\User|Bakery\Backoffice\SalesPage|array{form: Bakery\Backoffice\LoginForm} $model the signed-in user, or a page that has one, or the sign-in form
- */
-$user = $model instanceof Bakery\Backoffice\User ? $model : ($model->user ?? null);
+/** The back office's frame: its navigation, the signed-in person (the request's JWT), the flash messages. */
+$user = $this->request->jwt;
 ?>
 <!doctype html>
 <html lang="<?= $this->locale() ?>">
@@ -24,7 +20,7 @@ $user = $model instanceof Bakery\Backoffice\User ? $model : ($model->user ?? nul
             <nav class="flex gap-4 text-sm">
                 <a href="/backoffice"><?= $this->t('Orders') ?></a>
                 <a href="/backoffice/stock"><?= $this->t('Stock') ?></a>
-                <?php if ($user->isOwner()): ?>
+                <?php if ($user['role'] === 'owner'): ?>
                     <a href="/backoffice/sales"><?= $this->t('Sales') ?></a>
                 <?php endif ?>
                 <a href="/openapi/swagger.html"><?= $this->t('API') ?></a>
@@ -36,7 +32,7 @@ $user = $model instanceof Bakery\Backoffice\User ? $model : ($model->user ?? nul
             <?php if ($user !== null): ?>
                 <form method="post" action="/backoffice/logout">
                     <?= $this->csrf->field() ?>
-                    <button class="rounded bg-stone-700 px-2 py-1"><?= $this->t('Sign out {name}', ['name' => $user->name]) |> htmlspecialchars(...) ?></button>
+                    <button class="rounded bg-stone-700 px-2 py-1"><?= $this->t('Sign out {name}', ['name' => $user['name']]) ?></button>
                 </form>
             <?php endif ?>
         </span>

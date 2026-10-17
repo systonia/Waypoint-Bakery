@@ -2,16 +2,17 @@
 
 namespace Bakery\Shop;
 
-use Bakery\{Format, Language};
-use Bakery\Ordering\{Order, OrderFeed, OrderStatus, Orders};
+use Bakery\Format;
+use Bakery\Ordering\{Order, OrderStatus, Orders};
 use DateTimeImmutable;
 use Waypoint\Attributes\Inject;
 use Waypoint\Environment;
-use Waypoint\Live\{Component, Input};
+use Waypoint\I18n\Translator;
+use Waypoint\Live\{Broadcast, Component, Input};
 
 /**
  * The customer's order page. It changes when the bakery moves the order on, in whichever worker that happened:
- * the order feed reloads the order and renders this tab. The code in the link is the customer's key.
+ * the broadcast renders this tab, which reads the order again. The code in the link is the customer's key.
  */
 #[Component]
 final class OrderTracker
@@ -20,28 +21,28 @@ final class OrderTracker
     public string $code = '';
 
     #[Inject]
-    private OrderFeed $feed;
+    private Orders $orders;
 
     #[Inject]
-    private Orders $orders;
+    private Broadcast $broadcast;
 
     #[Inject]
     private Environment $env;
 
     #[Inject]
-    private Language $i18n;
+    private Translator $i18n;
 
     public function confirm(): void
     {
         $order = $this->order();
         if ($order !== null && $this->orders->confirm($order->id)) {
-            $this->feed->announce($order->id);
+            $this->broadcast->changed();
         }
     }
 
     private function order(): ?Order
     {
-        return $this->feed->get($this->code);
+        return $this->orders->byCode($this->code);
     }
 
     /** @return list<OrderStatus> */
@@ -53,18 +54,8 @@ final class OrderTracker
     private function reservedUntil(Order $order): string
     {
         return new DateTimeImmutable($order->createdAt)
-            ->modify('+' . (int) $this->env->get('UNCONFIRMED_MINUTES', 15) . ' minutes')
+            ->modify('+' . $this->env->int('UNCONFIRMED_MINUTES', 15) . ' minutes')
             ->setTimezone(new \DateTimeZone(date_default_timezone_get()))
             ->format('H:i');
-    }
-
-    private function day(string $date): string
-    {
-        return Format::day($date, $this->i18n->locale());
-    }
-
-    private function price(int $cents): string
-    {
-        return Format::price($cents, $this->i18n->locale());
     }
 }

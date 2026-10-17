@@ -2,8 +2,8 @@
 
 namespace Bakery\Shop;
 
-use Bakery\Language;
 use Waypoint\Attributes\Inject;
+use Waypoint\I18n\Translator;
 use Waypoint\Live\Component;
 
 /** The cart link in the header: it counts along whenever another component of the tab changes the cart. */
@@ -14,5 +14,5 @@ final class CartBadge
     private Cart $cart;
 
     #[Inject]
-    private Language $i18n;
+    private Translator $i18n;
 }

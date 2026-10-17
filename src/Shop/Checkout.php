@@ -2,24 +2,20 @@
 
 namespace Bakery\Shop;
 
-use Bakery\{Format, Language};
-use Bakery\Ordering\{OrderFeed, Orders, OutOfStock};
-use Bakery\Pickup\{Holidays, OpeningHours, PickupCalendar};
-use DateTimeImmutable;
+use Bakery\Format;
+use Bakery\Ordering\{Orders, OutOfStock};
+use Bakery\Pickup\PickupCalendar;
 use Waypoint\Attributes\Inject;
-use Waypoint\Live\{Component, Connection, Input};
+use Waypoint\I18n\Translator;
+use Waypoint\Live\{Broadcast, Component, Connection};
 
 /**
- * The checkout form. Placing an order reserves the stock, empties the tab's cart, tells every worker about the
- * new order (the order boards in the back office show it at once) and sends the browser to the order's page.
+ * The checkout form. Placing an order reserves the stock, empties the tab's cart, renders every open tab (the
+ * order boards in the back office show the new order at once) and sends the browser to the order's page.
  */
 #[Component]
 final class Checkout
 {
-    /** @var list<string> the pickup days the cart page found; checked again when the order is placed */
-    #[Input]
-    public array $days = [];
-
     #[Inject]
     private Cart $cart;
 
@@ -27,19 +23,16 @@ final class Checkout
     private Orders $orders;
 
     #[Inject]
-    private OrderFeed $feed;
+    private PickupCalendar $calendar;
 
     #[Inject]
-    private OpeningHours $hours;
-
-    #[Inject]
-    private Holidays $holidays;
+    private Broadcast $broadcast;
 
     #[Inject]
     private Connection $connection;
 
     #[Inject]
-    private Language $i18n;
+    private Translator $i18n;
 
     private CheckoutForm $form;
 
@@ -51,43 +44,27 @@ final class Checkout
         $this->form = new CheckoutForm();
     }
 
-    /** @param array<string, mixed> $fields */
-    public function place(array $fields): void
+    public function place(CheckoutForm $form): void
     {
-        $this->form = new CheckoutForm($fields);
-        $this->errors = $this->form->errors;
+        $this->form = $form;
+        $this->errors = $form->errors;
         if ($this->cart->count() === 0) {
             $this->errors['cart'] = $this->i18n->t('Your cart is empty.');
         }
-        if (!isset($this->errors['pickupDate']) && !in_array($this->form->pickupDate, $this->pickupDays(), true)) {
+        if (!isset($this->errors['pickupDate']) && !in_array($form->pickupDate, $this->calendar->upcoming(), true)) {
             $this->errors['pickupDate'] = $this->i18n->t('Please choose one of the pickup days.');
         }
         if ($this->errors !== []) {
             return;
         }
         try {
-            $order = $this->orders->place($this->cart->quantities(), trim($this->form->name), trim($this->form->email), $this->form->pickupDate, $this->i18n->locale());
+            $order = $this->orders->place($this->cart->quantities(), trim($form->name), trim($form->email), $form->pickupDate, $this->i18n->locale());
         } catch (OutOfStock $e) {
             $this->errors['cart'] = $this->i18n->t('Sorry, we do not have that many of {product} any more.', ['product' => $e->product]);
             return;
         }
         $this->cart->clear();
-        $this->feed->announce($order->id);
+        $this->broadcast->changed();
         $this->connection->navigate("/orders/{$order->code}/thanks");
-    }
-
-    /** @return list<string> */
-    private function pickupDays(): array
-    {
-        ['hours' => $hours, 'holidays' => $holidays] = \Tenma::all(
-            hours: fn () => $this->hours->week(),
-            holidays: fn () => $this->holidays->upcoming(),
-        );
-        return PickupCalendar::days(new DateTimeImmutable('today'), $hours, $holidays ?? []);
-    }
-
-    private function day(string $date): string
-    {
-        return Format::day($date, $this->i18n->locale());
     }
 }

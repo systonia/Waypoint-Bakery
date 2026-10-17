@@ -6,7 +6,7 @@ use Tenma\Db\Postgres;
 use Waypoint\Attributes\{Inject, Manager, Task};
 
 /**
- * The schema and the demo data, as Waypoint CLI tasks: `tenma bin/task.php db:migrate`, `db:seed`, `db:reset`.
+ * The schema and the demo data, as Waypoint CLI tasks: `tenma index.php db:migrate`, `db:seed`, `db:reset`.
  * They run under tenma because Tenma's Postgres client needs its event loop.
  */
 #[Manager('db')]

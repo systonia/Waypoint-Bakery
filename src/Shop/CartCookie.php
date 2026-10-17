@@ -3,6 +3,7 @@
 namespace Bakery\Shop;
 
 use Waypoint\Http\{MiddlewareBase, Request, Response};
+use Waypoint\Support\Uuid;
 
 /** Gives every browser a cart id in a cookie, so its cart survives going from page to page. */
 final class CartCookie extends MiddlewareBase
@@ -16,14 +17,10 @@ final class CartCookie extends MiddlewareBase
 
     protected function before(Request $req, Response $res): bool
     {
-        if ($req->method === 'GET' && !self::valid((string) ($req->cookies[self::NAME] ?? ''))) {
-            $bytes = random_bytes(16);
-            $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40);
-            $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80);
-            $id = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+        if ($req->method === 'GET' && !self::valid($req->cookies[self::NAME] ?? '')) {
             // This request's components see it already, the browser sends it from the next request on
-            $req->cookies[self::NAME] = $id;
-            $res->withCookie(self::NAME, $id, maxAge: 30 * 86400, secure: $req->https);
+            $req->cookies[self::NAME] = Uuid::v4();
+            $res->withCookie(self::NAME, $req->cookies[self::NAME], maxAge: 30 * 86400);
         }
         return true;
     }

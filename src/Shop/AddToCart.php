@@ -3,8 +3,8 @@
 namespace Bakery\Shop;
 
 use Bakery\Catalog\Products;
-use Bakery\Language;
 use Waypoint\Attributes\Inject;
+use Waypoint\I18n\Translator;
 use Waypoint\Live\{Component, Input};
 
 /** The button on a product card and page. The product id comes from the page, so the action looks it up again. */
@@ -21,7 +21,7 @@ final class AddToCart
     private Products $products;
 
     #[Inject]
-    private Language $i18n;
+    private Translator $i18n;
 
     private ?string $notice = null;
 

@@ -4,14 +4,15 @@ namespace Bakery\Api;
 
 use Bakery\Backoffice\Users;
 use Bakery\Catalog\Products;
-use Bakery\Ordering\{Order, OrderFeed, OrderStatus, Orders};
+use Bakery\Ordering\{Order, Orders};
 use Waypoint\Attributes\{Authenticated, Body, Controller, Get, Inject, Patch, Post, SkipCsrf, Summary, Tags, Throws, Version};
 use Waypoint\Exceptions\{NotFoundException, UnauthorizedException, ValidationException};
 use Waypoint\JWT;
+use Waypoint\Live\Broadcast;
 
 /**
  * The JSON API, for the till and the delivery app. Programs send a bearer token, not cookies, so CSRF does not
- * apply. The OpenAPI document is generated from these attributes: /openapi/swagger.html.
+ * apply. The OpenAPI document is generated from these attributes and the return types: /openapi/swagger.html.
  */
 #[Controller]
 #[Version('v1')]
@@ -28,21 +29,20 @@ final class ApiController
     private Orders $orders;
 
     #[Inject]
-    private OrderFeed $feed;
+    private Broadcast $broadcast;
 
     #[Post('/tokens')]
     #[Tags(['Sign-in'])]
     #[Summary('Exchange email and password for a bearer token')]
     #[Throws(
         exception: UnauthorizedException::class,
-        status: 401,
         description: 'Wrong email or password'
     )]
     public function token(#[Body] Credentials $credentials): BearerToken
     {
         $user = $this->users->verify($credentials->email, $credentials->password)
             ?? throw new UnauthorizedException('Wrong email or password.');
-        return new BearerToken(JWT::encode($user->claims()));
+        return new BearerToken(JWT::encode($user));
     }
 
     /** @return list<ProductSummary> */
@@ -68,10 +68,7 @@ final class ApiController
     #[Authenticated]
     #[Tags(['Orders'])]
     #[Summary('One order')]
-    #[Throws(
-        exception: NotFoundException::class,
-        status: 404
-    )]
+    #[Throws(NotFoundException::class)]
     public function order(string $code): OrderSummary
     {
         return OrderSummary::of($this->find($code));
@@ -82,22 +79,15 @@ final class ApiController
     #[Authenticated]
     #[Tags(['Orders'])]
     #[Summary('Move an order to its next step')]
-    #[Throws(
-        exception: NotFoundException::class,
-        status: 404
-    )]
-    #[Throws(
-        exception: ValidationException::class,
-        status: 422,
-        description: 'Not the next step of this order'
-    )]
+    #[Throws(NotFoundException::class)]
     public function advance(string $code, #[Body] StatusChange $change): OrderSummary
     {
         $order = $this->find($code);
-        if ($order->status->next() !== OrderStatus::from($change->status) || !$this->orders->advance($order->id, $order->status)) {
-            throw new ValidationException(errors: ['status' => "The order is {$order->status->value}; its next step is " . ($order->status->next()->value ?? 'none') . '.']);
+        if ($order->status->next() !== $change->status || !$this->orders->advance($order->id, $order->status)) {
+            $now = $this->find($code)->status;   // read again: another click may have moved it in the meantime
+            throw new ValidationException(errors: ['status' => "The order is {$now->value}; its next step is " . ($now->next()->value ?? 'none') . '.']);
         }
-        $this->feed->announce($order->id);
+        $this->broadcast->changed();
         return OrderSummary::of($this->find($code));
     }
 

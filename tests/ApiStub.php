@@ -7,7 +7,7 @@ use Tenma\Http\{Request, Response};
 
 /**
  * Answers like date.nager.at and api.open-meteo.com, under a prefix that sets how: /fast/..., /slow/... (300 ms
- * late, like the real services on a bad day) or /down/... (503). Counts the requests it answers, and the tests may
+ * late, like the real services on a bad day), /down/... (503) or /broken/... (200 with no JSON). Counts the requests it answers, and the tests may
  * change the forecast's temperature to see a refresh arrive.
  */
 final class ApiStub
@@ -28,6 +28,9 @@ final class ApiStub
         [, $mode, $path] = explode('/', $request->path, 3) + [2 => ''];
         if ($mode === 'down') {
             return new Response('overloaded', 503);
+        }
+        if ($mode === 'broken') {
+            return new Response('<html>maintenance</html>', 200);
         }
         if ($mode === 'slow') {
             \Tenma::sleep(0.3);

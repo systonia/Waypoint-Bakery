@@ -2,70 +2,45 @@
 
 namespace Bakery\Backoffice;
 
-use Bakery\{Format, Language};
-use Bakery\Ordering\{Order, OrderFeed, OrderStatus, Orders};
-use Waypoint\Attributes\Inject;
-use Waypoint\Exceptions\ForbiddenException;
-use Waypoint\Live\{Component, Connection};
+use Bakery\Format;
+use Bakery\Ordering\{Order, OrderStatus, Orders};
+use Waypoint\Attributes\{Authenticated, Inject};
+use Waypoint\I18n\Translator;
+use Waypoint\Live\{Broadcast, Component};
 
 /**
- * Every open order in columns by status. A new order from the shop, or a step another member of staff took in
- * another tab or on another worker, shows up here on its own: the order feed renders every tab when an order changes.
+ * Every open order in columns by status, for everyone signed in to the back office. A new order from the shop, or
+ * a step another member of staff took in another tab or on another worker, shows up here on its own: whoever
+ * changes an order calls Broadcast::changed(), which renders every tab of every worker.
  */
 #[Component]
+#[Authenticated]
 final class OrderBoard
 {
-    #[Inject]
-    private OrderFeed $feed;
-
     #[Inject]
     private Orders $orders;
 
     #[Inject]
-    private Connection $connection;
+    private Broadcast $broadcast;
 
     #[Inject]
-    private Language $i18n;
+    private Translator $i18n;
 
     /** Bound to the order the board showed: the click moves it from the status it had then, or does nothing. */
     public function advance(Order $order): void
     {
-        $this->staffOnly();
         if ($this->orders->advance($order->id, $order->status)) {
-            $this->feed->announce($order->id);
-        }
-    }
-
-    /** A live component checks the user itself: /_live is one route for every component. */
-    private function isStaff(): bool
-    {
-        return User::fromJwt($this->connection->request->jwt)?->isStaff() ?? false;
-    }
-
-    private function staffOnly(): void
-    {
-        if (!$this->isStaff()) {
-            throw new ForbiddenException('Only for the people in the bakery');
+            $this->broadcast->changed();
         }
     }
 
     /** @return list<array{OrderStatus, list<Order>}> each step with its orders */
     private function columns(): array
     {
-        $open = $this->feed->open();
+        $open = $this->orders->open();
         return array_map(
             fn (OrderStatus $status) => [$status, array_values(array_filter($open, fn (Order $order) => $order->status === $status))],
             [OrderStatus::Pending, OrderStatus::Received, OrderStatus::Baking, OrderStatus::Ready],
         );
-    }
-
-    private function day(string $date): string
-    {
-        return Format::day($date, $this->i18n->locale());
-    }
-
-    private function price(int $cents): string
-    {
-        return Format::price($cents, $this->i18n->locale());
     }
 }

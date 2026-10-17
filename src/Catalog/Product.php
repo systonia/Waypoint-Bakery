@@ -21,21 +21,6 @@ final readonly class Product
     ) {
     }
 
-    /** @param array<string, mixed> $row */
-    public static function fromRow(array $row): self
-    {
-        return new self(
-            (int) $row['id'],
-            (string) $row['slug'],
-            (array) $row['name'],
-            (array) $row['description'],
-            (string) $row['category'],
-            (int) $row['price_cents'],
-            (int) $row['stock'],
-            (string) $row['picture'],
-        );
-    }
-
     public function name(string $locale): string
     {
         return $this->name[$locale] ?? $this->name['en'];

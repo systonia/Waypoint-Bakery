@@ -35,13 +35,13 @@ INSERT INTO users (email, name, password_hash, role) VALUES
 ('ben@sonnenkorn.test', 'Ben', '$2y$12$M7B1lxyQrPHS7nh4kOWRPup06ouLXyiX3FW.0gCWFQCPaDb67Rjam', 'staff');
 
 -- Four weeks of picked-up orders, three to six a day, two products each
-INSERT INTO orders (code, customer_name, email, pickup_date, locale, status, total_cents, created_at, updated_at)
+INSERT INTO orders (code, customer_name, email, pickup_date, locale, status, created_at, updated_at)
 SELECT format('seed-%s-%s', d, k),
        (ARRAY['Mia', 'Noah', 'Emma', 'Paul', 'Lena', 'Felix'])[1 + (d + k) % 6],
        'guest@example.test',
        current_date - d,
        CASE WHEN k % 2 = 0 THEN 'de' ELSE 'en' END,
-       'picked_up', 0,
+       'picked_up',
        (current_date - d - 1) + time '09:00' + k * interval '17 minutes',
        (current_date - d) + time '10:00'
 FROM generate_series(1, 28) AS d, generate_series(1, 6) AS k
@@ -58,7 +58,4 @@ CROSS JOIN LATERAL (VALUES
     ((seed.d * 7 + seed.k * 3 + 1) % 8 + 1, 1 + (seed.d * seed.k) % 2)
 ) AS line (position, quantity)
 JOIN products p ON p.position = line.position
-WHERE o.code LIKE 'seed-%';
-
-UPDATE orders o SET total_cents = (SELECT sum(price_cents * quantity) FROM order_lines WHERE order_id = o.id)
 WHERE o.code LIKE 'seed-%';

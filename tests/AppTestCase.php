@@ -9,23 +9,23 @@ use Waypoint\Testing\TestCase;
 
 /**
  * The app as app.php builds it, on the test database (config.test.json) with fresh demo data for every test,
- * and the web services faked by ApiStub ($mode: fast, slow or down).
+ * and the web services faked by ApiStub ($mode: fast, slow, down or broken).
  */
 abstract class AppTestCase extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
-        $this->useApis('fast');
         ApiStub::$calls = 0;
         ApiStub::$temperature = 21.4;
         require __DIR__ . '/../app.php';
-        $this->service(DatabaseTasks::class)->reset();
+        $this->useApis('fast');
+        $this->app()->get(DatabaseTasks::class)->reset();
     }
 
     protected function useApis(string $mode): void
     {
-        $env = $this->service(Environment::class);
+        $env = $this->app()->get(Environment::class);
         $env->set('HOLIDAYS_URL', getenv('API_STUB') . "/$mode");
         $env->set('WEATHER_URL', getenv('API_STUB') . "/$mode");
     }
@@ -43,16 +43,6 @@ abstract class AppTestCase extends TestCase
 
     protected function db(): Postgres
     {
-        return $this->service(Postgres::class);
-    }
-
-    /**
-     * @template T of object
-     * @param class-string<T> $class
-     * @return T
-     */
-    protected function service(string $class): object
-    {
-        return $this->app()->get($class) ?? throw new \LogicException("No $class in the app");
+        return $this->app()->get(Postgres::class);
     }
 }

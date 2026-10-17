@@ -4,15 +4,17 @@ namespace Bakery\Backoffice;
 
 use Bakery\Ordering\{Order, OrderLine, Orders};
 use DateTimeImmutable;
-use LogicException;
 use Waypoint\Attributes\{Authenticated, Controller, Get, Ignore, Inject, Role};
 use Waypoint\Charts\Chart;
 use Waypoint\Exceptions\NotFoundException;
 use Waypoint\Export\Sheet;
-use Waypoint\Http\{Request, View};
+use Waypoint\Http\View;
 use Waypoint\I18n\Translator;
 
-/** The back office's pages. Sales and exports are for the owner; the order board and the stock for everyone in the bakery. */
+/**
+ * The back office's pages. Sales and exports are for the owner; the order board and the stock for everyone in the
+ * bakery. #[Ignore] keeps the exports, which are no View, out of the API's OpenAPI document.
+ */
 #[Controller('/backoffice')]
 #[Ignore]
 #[Authenticated]
@@ -28,29 +30,28 @@ final class BackofficeController
     private Translator $translator;
 
     #[Get('')]
-    public function board(Request $req): View
+    public function board(): View
     {
-        return new View('Backoffice/Board', self::user($req), layout: '_Backoffice.php');
+        return new View('Backoffice/Board', layout: '_Backoffice.php');
     }
 
     #[Get('/stock')]
-    public function stock(Request $req): View
+    public function stock(): View
     {
-        return new View('Backoffice/Stock', self::user($req), layout: '_Backoffice.php');
+        return new View('Backoffice/Stock', layout: '_Backoffice.php');
     }
 
     #[Get('/sales')]
     #[Role('owner')]
-    public function sales(Request $req): View
+    public function sales(): View
     {
         $locale = $this->translator->locale();
         ['revenue' => $revenue, 'products' => $products, 'orders' => $orders] = \Tenma::all(
-            revenue: fn () => $this->sales->revenueByDay(28),
+            revenue: fn () => $this->sales->revenueByDay(28, $locale),
             products: fn () => $this->sales->topProducts(28, $locale),
             orders: fn () => $this->orders->recent(7),
         );
         return new View('Backoffice/Sales', new SalesPage(
-            user: self::user($req),
             revenue: Chart::fromRows($revenue, x: 'day', y: 'revenue')
                 ->title($this->translator->t('Revenue per day, last four weeks'))
                 ->unit('€'),
@@ -72,12 +73,6 @@ final class BackofficeController
         return $this->sheet("orders.$format", $this->orders->recent(90));
     }
 
-    /** #[Authenticated] let the request in: it has a JWT. */
-    private static function user(Request $req): User
-    {
-        return User::fromJwt($req->jwt) ?? throw new LogicException('An authenticated request without a user');
-    }
-
     /** @param list<Order> $orders */
     private function sheet(string $file, array $orders): Sheet
     {
@@ -88,9 +83,9 @@ final class BackofficeController
             ->column('pickup', $this->translator->t('Pickup'), fn (Order $o) => new DateTimeImmutable($o->pickupDate))
             ->column('customer', $this->translator->t('Customer'), fn (Order $o) => $o->customerName)
             ->column('email', $this->translator->t('Email'))
-            ->column('status', $this->translator->t('Status'), fn (Order $o) => $o->status->value)
+            ->column('status', $this->translator->t('Status'), fn (Order $o) => $o->status->label($this->translator))
             ->column('items', $this->translator->t('Items'), fn (Order $o) => implode(', ', array_map(fn (OrderLine $l) => "$l->quantity × $l->name", $o->lines)))
-            ->column('total', $this->translator->t('Total (€)'), fn (Order $o) => $o->totalCents / 100)
+            ->column('total', $this->translator->t('Total (€)'), fn (Order $o) => $o->totalCents() / 100)
             ->rows($orders);
     }
 }

@@ -9,7 +9,6 @@ use Waypoint\Export\Sheet;
 final readonly class SalesPage
 {
     public function __construct(
-        public User $user,
         public Chart $revenue,
         public Chart $products,
         public Sheet $latest,

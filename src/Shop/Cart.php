@@ -2,7 +2,7 @@
 
 namespace Bakery\Shop;
 
-use Bakery\Catalog\Product;
+use Bakery\Catalog\{Product, Products};
 use Tenma\Db\Postgres;
 use Waypoint\Attributes\Inject;
 use Waypoint\Live\{Connection, Scoped};
@@ -30,11 +30,14 @@ final class Cart
         if ($this->lines === null) {
             $this->lines = [];
             $rows = $this->id() === null ? [] : $this->db->query(
-                'SELECT p.*, c.quantity FROM cart_lines c JOIN products p ON p.id = c.product_id WHERE c.cart = $1 ORDER BY p.position',
+                'SELECT c.quantity, ' . Products::COLUMNS . ' FROM cart_lines c JOIN products p ON p.id = c.product_id WHERE c.cart = $1 ORDER BY p.position',
                 [$this->id()],
             );
             foreach ($rows as $row) {
-                $this->lines[(int) $row['id']] = new CartLine(Product::fromRow($row), (int) $row['quantity']);
+                ['quantity' => $quantity] = $row;
+                unset($row['quantity']);
+                $product = new Product(...$row);
+                $this->lines[$product->id] = new CartLine($product, $quantity);
             }
         }
         return $this->lines;
@@ -102,7 +105,7 @@ final class Cart
 
     private function id(): ?string
     {
-        $id = (string) ($this->connection->request->cookies[CartCookie::NAME] ?? '');
+        $id = $this->connection->request->cookies[CartCookie::NAME] ?? '';
         return CartCookie::valid($id) ? $id : null;
     }
 }

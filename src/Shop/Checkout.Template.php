@@ -22,8 +22,8 @@
         <span class="text-sm font-medium">{{ $this->i18n->t('Pickup day') }}</span>
         <select name="pickupDate" class="rounded-lg border border-stone-300 px-3 py-2">
             <option value="">{{ $this->i18n->t('Choose a day') }}</option>
-            @foreach ($this->days as $date)
-                <option value="{{ $date }}" @if ($this->form->pickupDate === $date) selected @endif>{{ $this->day($date) }}</option>
+            @foreach ($this->calendar->upcoming() as $date)
+                <option value="{{ $date }}" @if ($this->form->pickupDate === $date) selected @endif>{{ Format::day($date, $this->i18n->locale()) }}</option>
             @endforeach
         </select>
         @if (isset($this->errors['pickupDate']))

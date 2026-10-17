@@ -4,9 +4,9 @@
 @else
     <div class="grid gap-6">
         <p class="text-lg">
-            {{ $this->i18n->t('Order {code} for {name}. Pickup: {day}', ['code' => $order->code, 'name' => $order->customerName, 'day' => $this->day($order->pickupDate)]) }}
+            {{ $this->i18n->t('Order {code} for {name}. Pickup: {day}', ['code' => $order->code, 'name' => $order->customerName, 'day' => Format::day($order->pickupDate, $this->i18n->locale())]) }}
         </p>
-        @if ($order->status->isPending())
+        @if ($order->status === OrderStatus::Pending)
             <div class="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
                 <p class="font-medium">{{ $this->i18n->t('We have put your items aside until {time}. Please confirm the order to keep them.', ['time' => $this->reservedUntil($order)]) }}</p>
                 <button data-on-click="confirm" class="mt-3 rounded-lg bg-amber-800 px-4 py-2 font-semibold text-white hover:bg-amber-700">{{ $this->i18n->t('Confirm order') }}</button>
@@ -25,10 +25,10 @@
         <table class="w-full text-left">
             <tbody class="divide-y divide-stone-200">
             @foreach ($order->lines as $line)
-                <tr data-key="{{ $line->product }}"><td class="py-2">{{ $line->quantity }} × {{ $line->name }}</td><td class="py-2 text-right tabular-nums">{{ $this->price($line->totalCents()) }}</td></tr>
+                <tr data-key="{{ $line->product }}"><td class="py-2">{{ $line->quantity }} × {{ $line->name }}</td><td class="py-2 text-right tabular-nums">{{ Format::price($line->totalCents(), $this->i18n->locale()) }}</td></tr>
             @endforeach
             </tbody>
-            <tfoot><tr><th class="py-2">{{ $this->i18n->t('Total') }}</th><td class="py-2 text-right font-semibold tabular-nums">{{ $this->price($order->totalCents) }}</td></tr></tfoot>
+            <tfoot><tr><th class="py-2">{{ $this->i18n->t('Total') }}</th><td class="py-2 text-right font-semibold tabular-nums">{{ Format::price($order->totalCents(), $this->i18n->locale()) }}</td></tr></tfoot>
         </table>
     </div>
 @endif

@@ -6,7 +6,7 @@ use Waypoint\Attributes\Inject;
 
 /**
  * The last good answer of each web service, kept in this worker's memory. Timers in index.php refresh it in the
- * background; the product page reads it without waiting. A failed refresh keeps what was there before.
+ * background; the product page and the pickup days read it without waiting. A failed refresh keeps what was there.
  */
 final class LastKnown
 {

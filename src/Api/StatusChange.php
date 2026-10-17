@@ -2,18 +2,17 @@
 
 namespace Bakery\Api;
 
-use Waypoint\Attributes\{NotBlank, OneOf, Property};
+use Bakery\Ordering\OrderStatus;
+use Waypoint\Attributes\Property;
 use Waypoint\FromArray;
 
 final class StatusChange
 {
     use FromArray;
 
-    #[NotBlank]
-    #[OneOf(['baking', 'ready', 'picked_up'])]
     #[Property(
         description: 'The next step of the order: received → baking → ready → picked_up',
         example: 'baking'
     )]
-    public string $status = '';
+    public ?OrderStatus $status = null;
 }
