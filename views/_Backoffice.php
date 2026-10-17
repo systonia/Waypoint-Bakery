@@ -1,5 +1,9 @@
 {{/* The back office's frame: its navigation, the signed-in person (the request's JWT), the flash messages. */}}
-@code $user = $this->request?->jwt @endcode
+
+@code
+    $user = $this->request?->jwt
+@endcode
+
 <!doctype html>
 <html lang="{{ $this->locale() }}">
 <head>
