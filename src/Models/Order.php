@@ -2,9 +2,10 @@
 
 namespace Bakery\Models;
 
+use Waypoint\Attributes\ListOf;
+
 final readonly class Order
 {
-    /** @param list<OrderLine> $lines */
     public function __construct(
         public int $id,
         public string $code,
@@ -14,6 +15,7 @@ final readonly class Order
         public string $locale,
         public OrderStatus $status,
         public string $createdAt,
+        #[ListOf(OrderLine::class)]
         public array $lines,
     ) {
     }
