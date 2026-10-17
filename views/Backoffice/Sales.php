@@ -1,10 +1,9 @@
-@use (Waypoint\Html)
 @model (Bakery\Models\SalesPage)
 @section('title'){{ $this->t('Sales') }}@endsection
 <h1 class="mb-6 text-2xl font-semibold">{{ $this->t('Sales') }}</h1>
 <div class="grid gap-8 lg:grid-cols-2">
-    <section>{{ new Html($this->chart($model->revenue)) }}</section>
-    <section>{{ new Html($this->chart($model->products)) }}</section>
+    <section>{{ $this->chart($model->revenue) }}</section>
+    <section>{{ $this->chart($model->products) }}</section>
 </div>
 <section class="mt-10">
     <h2 class="mb-3 flex flex-wrap items-baseline gap-4 text-lg font-semibold">
