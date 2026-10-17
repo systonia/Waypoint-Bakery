@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d78182ecd4f5d1d639cb1312b8b67bee",
+    "content-hash": "38f907b5914a8485060a0fc4fd9928d8",
     "packages": [
         {
             "name": "psr/container",
@@ -512,16 +512,16 @@
         },
         {
             "name": "systonia/waypoint-live",
-            "version": "v0.2.3",
+            "version": "v0.2.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/systonia/Waypoint-Live.git",
-                "reference": "a7392da482d90f6e4495cb720229889cc82ff878"
+                "reference": "01bdc6307525fbf7ee1d29f47894d8717beae84a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/systonia/Waypoint-Live/zipball/a7392da482d90f6e4495cb720229889cc82ff878",
-                "reference": "a7392da482d90f6e4495cb720229889cc82ff878",
+                "url": "https://api.github.com/repos/systonia/Waypoint-Live/zipball/01bdc6307525fbf7ee1d29f47894d8717beae84a",
+                "reference": "01bdc6307525fbf7ee1d29f47894d8717beae84a",
                 "shasum": ""
             },
             "require": {
@@ -563,9 +563,9 @@
             "description": "Live components for Waypoint under Tenma: server-side PHP components, events and renders over one WebSocket, services called directly.",
             "support": {
                 "issues": "https://github.com/systonia/Waypoint-Live/issues",
-                "source": "https://github.com/systonia/Waypoint-Live/tree/v0.2.3"
+                "source": "https://github.com/systonia/Waypoint-Live/tree/v0.2.4"
             },
-            "time": "2026-10-17T01:49:39+00:00"
+            "time": "2026-10-17T13:17:30+00:00"
         }
     ],
     "packages-dev": [

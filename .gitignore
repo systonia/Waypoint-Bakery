@@ -1,7 +1,6 @@
 /vendor/
 /.env
 /config.local.json
-/var/
 .phpunit.cache/
 .phpunit.result.cache
 .DS_Store

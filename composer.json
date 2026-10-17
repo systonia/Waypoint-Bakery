@@ -10,7 +10,7 @@
         "systonia/waypoint-export": "^0.1.4",
         "systonia/waypoint-flash": "^0.2.4",
         "systonia/waypoint-i18n": "^0.2.4",
-        "systonia/waypoint-live": "^0.2.3"
+        "systonia/waypoint-live": "^0.2.4"
     },
     "require-dev": {
         "phpstan/extension-installer": "^1.4",
