@@ -27,9 +27,6 @@ $every = function (string $setting, float $seconds, Closure $job) use ($env): vo
 // every worker renders again: the board drops them, the customer's page says so
 $orders = $app->get(Orders::class);
 $broadcast = $app->get(Broadcast::class);
-// ponytail: Live 0.2.2 subscribes a worker to Broadcast::changed() in the WebSocket of its first tab, and the
-// subscription ends when that tab closes. This one lasts as long as the worker; remove it once Live subscribes at boot.
-Tenma::subscribe('waypoint-live', fn () => $broadcast->changedHere());
 $every('EXPIRY_INTERVAL', 30, function () use ($orders, $broadcast, $env) {
     if ($orders->expireUnconfirmed($env->int('UNCONFIRMED_MINUTES', 15)) > 0) {
         $broadcast->changed();
