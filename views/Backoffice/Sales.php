@@ -1,6 +1,12 @@
 @model (Bakery\Models\SalesPage)
-@section('title'){{ $this->t('Sales') }}@endsection
-<h1 class="mb-6 text-2xl font-semibold">{{ $this->t('Sales') }}</h1>
+
+@section('title')
+    {{ $this->t('Sales') }}
+@endsection
+
+<h1 class="mb-6 text-2xl font-semibold">
+    {{ $this->t('Sales') }}
+</h1>
 <div class="grid gap-8 lg:grid-cols-2">
     <section>{{ $this->chart($model->revenue) }}</section>
     <section>{{ $this->chart($model->products) }}</section>

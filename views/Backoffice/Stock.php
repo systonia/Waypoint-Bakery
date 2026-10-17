@@ -1,3 +1,10 @@
-@section('title'){{ $this->t('Stock') }}@endsection
-<h1 class="mb-6 text-2xl font-semibold">{{ $this->t('Stock') }}</h1>
-<div class="max-w-xl"><app-stock-editor></app-stock-editor></div>
+@section('title')
+    {{ $this->t('Stock') }}
+@endsection
+
+<h1 class="mb-6 text-2xl font-semibold">
+    {{ $this->t('Stock') }}
+</h1>
+<div class="max-w-xl">
+    <app-stock-editor></app-stock-editor>
+</div>
