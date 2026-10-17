@@ -1,5 +1,5 @@
 <?php
-/** @var Bakery\Backoffice\LoginForm $model */
+/** @var Bakery\Requests\LoginForm $model */
 $errors = $this->request->method === 'POST' ? $model->errors : [];
 ?>
 <?php $this->startSection('title') ?><?= $this->t('Sign in') ?><?php $this->endSection() ?>

@@ -1,6 +1,6 @@
 <?php
-/** @var list<Bakery\Catalog\Product> $model */
-use Bakery\Format;
+/** @var list<Bakery\Models\Product> $model */
+use Bakery\Services\Format;
 
 $locale = $this->locale();
 ?>

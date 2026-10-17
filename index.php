@@ -3,9 +3,8 @@
 // it runs a CLI task instead: tenma index.php db:reset.
 // This script runs once per worker. What it sets up here stays in memory and serves every request.
 
-use Bakery\Backoffice\SalesReport;
-use Bakery\Ordering\Orders;
-use Bakery\Pickup\LastKnown;
+use Bakery\Repositories\{Orders, SalesReport};
+use Bakery\Services\LastKnown;
 use Waypoint\Environment;
 use Waypoint\Live\Broadcast;
 

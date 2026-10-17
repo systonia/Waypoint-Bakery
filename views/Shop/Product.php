@@ -1,6 +1,6 @@
 <?php
-/** @var Bakery\Shop\ProductPage $model */
-use Bakery\Format;
+/** @var Bakery\Models\ProductPage $model */
+use Bakery\Services\Format;
 
 $locale = $this->locale();
 $product = $model->product;

@@ -1,0 +1,42 @@
+<?php
+
+namespace Bakery\Models;
+
+use Waypoint\I18n\Translator;
+
+/** pending (reserved, waiting for the customer) → received → baking → ready → picked up; pending → cancelled */
+enum OrderStatus: string
+{
+    case Pending = 'pending';
+    case Received = 'received';
+    case Baking = 'baking';
+    case Ready = 'ready';
+    case PickedUp = 'picked_up';
+    case Cancelled = 'cancelled';
+
+    /** The steps the order board shows, in order. */
+    public const array BOARD = [self::Pending, self::Received, self::Baking, self::Ready];
+
+    /** The step the bakery takes next, null for an order that is done or still waits for its customer. */
+    public function next(): ?self
+    {
+        return match ($this) {
+            self::Received => self::Baking,
+            self::Baking => self::Ready,
+            self::Ready => self::PickedUp,
+            default => null,
+        };
+    }
+
+    public function label(Translator $i18n): string
+    {
+        return match ($this) {
+            self::Pending => $i18n->t('Not confirmed yet'),
+            self::Received => $i18n->t('Received'),
+            self::Baking => $i18n->t('In the oven'),
+            self::Ready => $i18n->t('Ready for pickup'),
+            self::PickedUp => $i18n->t('Picked up'),
+            self::Cancelled => $i18n->t('Cancelled'),
+        };
+    }
+}

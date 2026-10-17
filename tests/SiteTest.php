@@ -2,7 +2,7 @@
 
 namespace Bakery\Tests;
 
-use Bakery\Pickup\PickupCalendar;
+use Bakery\Tests\Support\{AppTestCase, LiveClient};
 use Waypoint\JWT;
 
 /**
@@ -53,7 +53,7 @@ final class SiteTest extends AppTestCase
 
     public function testAnOrderTravelsFromTheShopToTheBakeryAndBackAcrossWorkers(): void
     {
-        $board = new LiveClient($this->port, ['session' => JWT::encode(['sub' => 2, 'name' => 'Ben', 'role' => 'staff'])]);
+        $board = new LiveClient($this->port, ['session' => JWT::encode(self::STAFF)]);
         $this->assertStringContainsString('Ready for pickup', $board->mount('app-order-board'));
 
         // A customer fills the cart on the catalog page and checks out on the cart page
@@ -68,7 +68,7 @@ final class SiteTest extends AppTestCase
         $this->http('GET', '/cart');
         $checkout = new LiveClient($this->port, $this->cookies);
         $checkout->mount('app-checkout');
-        $day = $this->app()->get(PickupCalendar::class)->upcoming()[0];
+        $day = $this->pickupDay();
         $checkout->call('place', [['name' => 'Emma', 'email' => 'emma@example.test', 'pickupDate' => $day]]);
         $this->assertCount(1, $checkout->navigations);
         $this->assertMatchesRegularExpression('#^/orders/[0-9a-f]{10}/thanks$#', $checkout->navigations[0]);
@@ -90,7 +90,7 @@ final class SiteTest extends AppTestCase
             $tab->waitFor('/aria-current="step"\s*>\s*Received/');
         }
 
-        $token = JWT::encode(['sub' => 2, 'name' => 'Ben', 'role' => 'staff']);
+        $token = JWT::encode(self::STAFF);
         [$status] = $this->http('PATCH', "/v1/orders/$code", ['status' => 'baking'], ["Authorization: Bearer $token"]);
         $this->assertSame(200, $status);
         foreach ($tabs as $tab) {

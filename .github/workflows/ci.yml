@@ -43,7 +43,7 @@ jobs:
           composer validate --strict
           composer install --no-progress --no-interaction
 
-      # vendor/bin/phpunit hands the run to tenma (tests/bootstrap.php)
+      # vendor/bin/phpunit hands the run to tenma (tests/Support/bootstrap.php)
       - name: Tests
         run: vendor/bin/phpunit
 

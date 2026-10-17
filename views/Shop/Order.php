@@ -1,4 +1,4 @@
-<?php /** @var Bakery\Ordering\Order $model */ ?>
+<?php /** @var Bakery\Models\Order $model */ ?>
 <?php $this->startSection('title') ?><?= $this->t('Your order') ?><?php $this->endSection() ?>
 <h1 class="text-3xl font-semibold"><?= $this->t('Your order') ?></h1>
 <p class="mt-2 text-sm text-stone-500"><?= $this->t('Keep this page open: it shows each step the moment the bakery takes it.') ?></p>

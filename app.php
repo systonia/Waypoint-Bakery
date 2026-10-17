@@ -4,11 +4,10 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use Bakery\Api\ApiController;
-use Bakery\Backoffice\{BackofficeController, OrderBoard, SessionController, StockEditor};
-use Bakery\Database\DatabaseTasks;
-use Bakery\Format;
-use Bakery\Shop\{AddToCart, CartBadge, CartCookie, CartEditor, Checkout, OrderTracker, ShopController};
+use Bakery\Components\{AddToCart, CartBadge, CartEditor, Checkout, OrderBoard, OrderTracker, StockEditor};
+use Bakery\Controllers\{ApiController, BackofficeController, SessionController, ShopController};
+use Bakery\Services\{CartCookie, Format};
+use Bakery\Tasks\DatabaseTasks;
 use Tenma\Db\Postgres;
 use Waypoint\Charts\{ChartsOptions, ChartsPlugin};
 use Waypoint\Environment;

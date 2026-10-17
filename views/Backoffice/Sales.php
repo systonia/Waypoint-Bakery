@@ -1,4 +1,4 @@
-<?php /** @var Bakery\Backoffice\SalesPage $model */ ?>
+<?php /** @var Bakery\Models\SalesPage $model */ ?>
 <?php $this->startSection('title') ?><?= $this->t('Sales') ?><?php $this->endSection() ?>
 <h1 class="mb-6 text-2xl font-semibold"><?= $this->t('Sales') ?></h1>
 <div class="grid gap-8 lg:grid-cols-2">
