@@ -8,7 +8,6 @@ use Waypoint\Attributes\ListOf;
 /** An order as the API shows it: without the customer's email and the internal id. */
 final readonly class OrderSummary
 {
-    /** @param list<OrderLine> $lines */
     public function __construct(
         public string $code,
         public string $customer,

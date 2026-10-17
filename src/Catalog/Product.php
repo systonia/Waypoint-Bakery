@@ -7,10 +7,6 @@ use Waypoint\Attributes\{Ignore, ListOf};
 /** One thing the bakery sells, with its name and description in every language of the shop. */
 final readonly class Product
 {
-    /**
-     * @param array<string, string> $name locale => name
-     * @param array<string, string> $description locale => text
-     */
     public function __construct(
         #[Ignore]
         public int $id,

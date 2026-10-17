@@ -45,7 +45,6 @@ final class ApiController
         return new BearerToken(JWT::encode($user));
     }
 
-    /** @return list<Product> */
     #[Get('/products')]
     #[Tags(['Products'])]
     #[Summary('The range with prices in cents and what is left')]
@@ -58,7 +57,6 @@ final class ApiController
         return $this->products->all();
     }
 
-    /** @return list<OrderSummary> */
     #[Get('/orders')]
     #[Authenticated]
     #[Tags(['Orders'])]
