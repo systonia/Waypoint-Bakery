@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d3c4bb4aec10ceff64c3931b7fccc405",
+    "content-hash": "7f0b32c6fe7f25697676c0a91d1a14df",
     "packages": [
         {
             "name": "psr/container",
@@ -424,11 +424,11 @@
         },
         {
             "name": "systonia/waypoint-export",
-            "version": "0.1.4",
+            "version": "0.1.5",
             "dist": {
                 "type": "path",
                 "url": "/Users/lento/Coding/Leisenfeld Media/Systonia/Waypoint-Export",
-                "reference": "9c0696000fad78f2d352a3a1bc9f11c2843065e4"
+                "reference": "08a837699016805e9e93ea4e7cb40e36bc10ebc4"
             },
             "require": {
                 "php": ">=8.5",
