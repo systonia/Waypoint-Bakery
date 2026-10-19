@@ -79,8 +79,6 @@ final class BackofficeController
     /** @param list<Order> $orders */
     private function sheet(string $file, array $orders): Sheet
     {
-        // The cells as closures in variables: passed inline, PHPStan would take their parameter from column()'s
-        // Closure(never) and lose the Order
         $placed = fn (Order $o) => new DateTimeImmutable($o->createdAt);
         $pickup = fn (Order $o) => new DateTimeImmutable($o->pickupDate);
         $customer = fn (Order $o) => $o->customerName;
