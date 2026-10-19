@@ -16,7 +16,7 @@
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.2",
         "phpunit/phpunit": "^13.3",
-        "tenma/stubs": "^0.1.16"
+        "tenma/stubs": "^0.1.19"
     },
     "autoload": {
         "psr-4": {
