@@ -5,7 +5,7 @@ namespace Bakery\Controllers;
 use Bakery\Models\{Order, OrderLine, SalesPage};
 use Bakery\Repositories\{Orders, SalesReport};
 use DateTimeImmutable;
-use Waypoint\Attributes\{Authenticated, Controller, Get, Ignore, Inject, Role};
+use Waypoint\Attributes\{Authenticated, Controller, Get, Ignore, Inject, Layout, Role};
 use Waypoint\Charts\Chart;
 use Waypoint\Exceptions\NotFoundException;
 use Waypoint\Export\Sheet;
@@ -19,6 +19,7 @@ use Waypoint\I18n\Translator;
 #[Controller('/backoffice')]
 #[Ignore]
 #[Authenticated]
+#[Layout('_Backoffice.php')]
 final class BackofficeController
 {
     #[Inject]
@@ -33,13 +34,13 @@ final class BackofficeController
     #[Get('')]
     public function board(): View
     {
-        return new View('Backoffice/Board', layout: '_Backoffice.php');
+        return new View('Backoffice/Board');
     }
 
     #[Get('/stock')]
     public function stock(): View
     {
-        return new View('Backoffice/Stock', layout: '_Backoffice.php');
+        return new View('Backoffice/Stock');
     }
 
     #[Get('/sales')]
@@ -62,7 +63,7 @@ final class BackofficeController
                 ->title($this->translator->t('Sold in the last four weeks'))
                 ->size(640, 280),
             latest: $this->sheet('orders.html', $orders),
-        ), layout: '_Backoffice.php');
+        ));
     }
 
     /** The last 90 days of orders as orders.csv or orders.xlsx. */
