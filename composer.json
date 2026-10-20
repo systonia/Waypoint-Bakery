@@ -5,7 +5,7 @@
     "license": "MIT OR Apache-2.0",
     "require": {
         "php": ">=8.5",
-        "systonia/waypoint": "^0.7.11",
+        "systonia/waypoint": "^0.7.12",
         "systonia/waypoint-charts": "^0.1.4",
         "systonia/waypoint-export": "^0.1.5",
         "systonia/waypoint-flash": "^0.2.4",
