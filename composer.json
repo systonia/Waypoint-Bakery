@@ -5,18 +5,18 @@
     "license": "MIT OR Apache-2.0",
     "require": {
         "php": ">=8.5",
-        "systonia/waypoint": "^0.7.12",
+        "systonia/waypoint": "^0.7.13",
         "systonia/waypoint-charts": "^0.1.4",
         "systonia/waypoint-export": "^0.1.5",
         "systonia/waypoint-flash": "^0.2.4",
         "systonia/waypoint-i18n": "^0.2.4",
-        "systonia/waypoint-live": "^0.2.5"
+        "systonia/waypoint-live": "^0.2.6"
     },
     "require-dev": {
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.2",
         "phpunit/phpunit": "^13.3",
-        "tenma/stubs": "^0.1.19"
+        "tenma/stubs": "^0.2.0"
     },
     "autoload": {
         "psr-4": {

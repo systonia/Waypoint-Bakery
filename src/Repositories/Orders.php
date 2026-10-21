@@ -4,7 +4,7 @@ namespace Bakery\Repositories;
 
 use Bakery\Models\{Order, OrderLine, OrderStatus, OutOfStock};
 use DomainException;
-use Tenma\Db\Postgres;
+use Data\Postgres;
 use Waypoint\Attributes\Inject;
 use Waypoint\Support\Row;
 

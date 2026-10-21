@@ -4,7 +4,7 @@ namespace Bakery\Tests\Support;
 
 use Bakery\Services\PickupCalendar;
 use Bakery\Tasks\DatabaseTasks;
-use Tenma\Db\Postgres;
+use Data\Postgres;
 use Waypoint\Environment;
 use Waypoint\Http\Request;
 use Waypoint\Live\Broadcast;
@@ -52,7 +52,7 @@ abstract class AppTestCase extends TestCase
         return $row === null ? null : reset($row);
     }
 
-    /** What the app does after an order changed. The broadcast travels through Tenma::publish(), so it takes a moment. */
+    /** What the app does after an order changed. The broadcast travels through Messaging\Channel::publish(), so it takes a moment. */
     protected function broadcast(): void
     {
         $this->app()->get(Broadcast::class)->changed();
@@ -62,7 +62,7 @@ abstract class AppTestCase extends TestCase
     /** Lets broadcasts that are on their way reach the tabs. */
     protected function settle(): void
     {
-        \Tenma::sleep(0.2);
+        \Threading\Task::delay(0.2);
     }
 
     protected function db(): Postgres

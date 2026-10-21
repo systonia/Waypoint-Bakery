@@ -8,7 +8,7 @@ use Bakery\Components\{AddToCart, CartBadge, CartEditor, Checkout, OrderBoard, O
 use Bakery\Controllers\{ApiController, BackofficeController, SessionController, ShopController};
 use Bakery\Services\{CartCookie, Format};
 use Bakery\Tasks\DatabaseTasks;
-use Tenma\Db\Postgres;
+use Data\Postgres;
 use Waypoint\Charts\{ChartsOptions, ChartsPlugin};
 use Waypoint\Environment;
 use Waypoint\Export\{ExportOptions, ExportPlugin};

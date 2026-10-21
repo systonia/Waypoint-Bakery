@@ -17,8 +17,8 @@ $env = $app->get(Environment::class);
 $every = function (string $setting, float $seconds, Closure $job) use ($env): void {
     $seconds = $env->float($setting, $seconds);
     if ($seconds > 0) {
-        Tenma::async($job);
-        Tenma::setInterval($job, $seconds);
+        \Threading\Task::run($job);
+        \Threading\Timer::every($seconds, $job);
     }
 };
 

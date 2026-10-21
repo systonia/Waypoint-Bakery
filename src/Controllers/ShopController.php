@@ -49,7 +49,7 @@ final class ShopController
     /**
      * The product with its next pickup days, each with the weather. The holidays and the weather come from this
      * worker's memory (LastKnown, refreshed by timers in index.php), so the page only waits for Postgres. With
-     * ?live they are fetched on this request instead, together with the rest by Tenma::all(): the page then takes
+     * ?live they are fetched on this request instead, together with the rest by Threading\Task::all(): the page then takes
      * as long as the slowest source. Server-Timing says which version ran and how long it took.
      */
     #[Get('/products/{slug}')]
@@ -60,7 +60,7 @@ final class ShopController
         // The sources are asked at once; each closure fills its variable
         $product = $holidays = $weather = null;
         $hours = [];
-        \Tenma::all(
+        \Threading\Task::all(
             function () use (&$product, $slug): void { $product = $this->products->bySlug($slug); },
             function () use (&$hours): void { $hours = $this->hours->week(); },
             function () use (&$holidays, $live): void { $holidays = $live ? $this->holidays->upcoming() : $this->lastKnown->holidays; },

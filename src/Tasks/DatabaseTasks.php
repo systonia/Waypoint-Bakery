@@ -2,7 +2,7 @@
 
 namespace Bakery\Tasks;
 
-use Tenma\Db\Postgres;
+use Data\Postgres;
 use Waypoint\Attributes\{Inject, Manager, Task};
 
 /**
@@ -35,7 +35,7 @@ final class DatabaseTasks
             $ran = [];
             foreach ($files as $file) {
                 if (!in_array(basename($file), $applied, true)) {
-                    $tx->script(\Tenma\Fs::readFile($file));
+                    $tx->script(new \FileSystem\FileInfo($file)->read());
                     $tx->execute('INSERT INTO schema_migrations (name) VALUES ($1)', [basename($file)]);
                     $ran[] = basename($file);
                 }
@@ -50,7 +50,7 @@ final class DatabaseTasks
     public function seed(): string
     {
         $this->migrate();
-        $this->db->script(\Tenma\Fs::readFile(self::DIRECTORY . '/seed.sql'));
+        $this->db->script(new \FileSystem\FileInfo(self::DIRECTORY . '/seed.sql')->read());
         return "Seeded the demo data.\n";
     }
 

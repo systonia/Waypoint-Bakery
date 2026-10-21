@@ -3,7 +3,7 @@
 namespace Bakery\Repositories;
 
 use Bakery\Models\{CartLine, Product};
-use Tenma\Db\Postgres;
+use Data\Postgres;
 use Waypoint\Attributes\Inject;
 use Waypoint\Support\Row;
 

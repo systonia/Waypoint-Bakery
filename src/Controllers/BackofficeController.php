@@ -50,7 +50,7 @@ final class BackofficeController
         $locale = $this->translator->locale();
         // The three queries run at once; each closure fills its variable
         $revenue = $products = $orders = [];
-        \Tenma::all(
+        \Threading\Task::all(
             function () use (&$revenue, $locale): void { $revenue = $this->sales->revenueByDay(28, $locale); },
             function () use (&$products, $locale): void { $products = $this->sales->topProducts(28, $locale); },
             function () use (&$orders): void { $orders = $this->orders->recent(7); },

@@ -30,7 +30,7 @@ final class Weather
             'forecast_days' => 7,
         ]);
         try {
-            $response = \Tenma::fetch($url, timeout: $this->env->float('API_TIMEOUT', 2.5));
+            $response = new \Http\Client($this->env->float('API_TIMEOUT', 2.5))->get($url);
             if ($response->status !== 200) {
                 return null;
             }

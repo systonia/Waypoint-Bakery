@@ -9,7 +9,7 @@ use Waypoint\JWT;
  * The app as it runs: `tenma --workers 2 index.php` on the test database, driven like browsers (HTTP and the live
  * WebSocket) and like the till (the API). Tenma hands new connections to the workers in turn, so the tabs below
  * sit on both workers, and an order change from one worker has to reach the other: Broadcast::changed() goes out
- * through Tenma::publish().
+ * through Messaging\Channel::publish().
  */
 final class SiteTest extends AppTestCase
 {
@@ -38,7 +38,7 @@ final class SiteTest extends AppTestCase
         );
         $this->server = $server ?: throw new \RuntimeException('tenma did not start');
         for ($i = 0; $i < 100 && @fsockopen('127.0.0.1', $this->port) === false; $i++) {
-            \Tenma::sleep(0.05);
+            \Threading\Task::delay(0.05);
         }
     }
 

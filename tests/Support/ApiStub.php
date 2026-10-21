@@ -3,7 +3,7 @@
 namespace Bakery\Tests\Support;
 
 use DateTimeImmutable;
-use Tenma\Http\{Request, Response};
+use Http\{Request, Response};
 
 /**
  * Answers like date.nager.at and api.open-meteo.com, under a prefix that sets how: /fast/..., /slow/... (300 ms
@@ -33,7 +33,7 @@ final class ApiStub
             return new Response('<html>maintenance</html>', 200);
         }
         if ($mode === 'slow') {
-            \Tenma::sleep(0.3);
+            \Threading\Task::delay(0.3);
         }
         if (str_starts_with($path, 'api/v3/NextPublicHolidays/')) {
             return Response::json([

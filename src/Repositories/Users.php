@@ -2,7 +2,7 @@
 
 namespace Bakery\Repositories;
 
-use Tenma\Db\Postgres;
+use Data\Postgres;
 use Waypoint\Attributes\Inject;
 use Waypoint\Support\Row;
 

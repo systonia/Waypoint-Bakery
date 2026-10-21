@@ -8,6 +8,6 @@ $probe = stream_socket_server('tcp://127.0.0.1:0') ?: throw new RuntimeException
 $port = (int) substr((string) strrchr((string) stream_socket_get_name($probe, false), ':'), 1);
 fclose($probe);
 putenv("API_STUB=http://127.0.0.1:$port");
-Tenma::serve($port, new Bakery\Tests\Support\ApiStub());
+new \Http\Server($port, new Bakery\Tests\Support\ApiStub())->start();
 
-Tenma::async(fn () => exit((new PHPUnit\TextUI\Application())->run(Waypoint\Support\Row::of($_SERVER)->list('argv', 'string'))));
+\Threading\Task::run(fn () => exit((new PHPUnit\TextUI\Application())->run(Waypoint\Support\Row::of($_SERVER)->list('argv', 'string'))));
