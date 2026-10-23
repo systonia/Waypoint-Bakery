@@ -79,7 +79,7 @@ Each part of the shop, the files it lives in, and the page of the documentation 
 | The app: plugins, options, the Postgres pool, middlewares, controllers | [`app.php`](app.php) | Waypoint [Application setup](https://github.com/systonia/Waypoint/blob/main/docs/guides/application.md) |
 | Serving it, the background jobs as timers, CLI tasks with arguments | [`index.php`](index.php) | Tenma [Timers](https://github.com/systonia/Tenma/blob/main/docs/guides/async.md#timers), Waypoint [CLI tasks](https://github.com/systonia/Waypoint/blob/main/docs/guides/cli-tasks.md) |
 | Migrations and demo data as CLI tasks | [`src/Tasks/DatabaseTasks.php`](src/Tasks/DatabaseTasks.php), [`database/`](database) | Tenma [Databases](https://github.com/systonia/Tenma/blob/main/docs/guides/database.md) |
-| Tailwind on every save | [`tenma.dev.php`](tenma.dev.php), [`assets/app.css`](assets/app.css) | Tenma [Watch mode and build hooks](https://github.com/systonia/Tenma/blob/main/docs/guides/watch.md) |
+| Tailwind on every save | [`tenma.json`](tenma.json), [`assets/app.css`](assets/app.css) | Tenma [Watch mode and build hooks](https://github.com/systonia/Tenma/blob/main/docs/guides/watch.md) |
 
 ### Storefront
 
